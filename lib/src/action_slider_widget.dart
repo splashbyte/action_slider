@@ -1,30 +1,44 @@
-import 'package:confirmation_slider/src/cross_fade.dart';
-import 'package:confirmation_slider/src/mode.dart';
-import 'package:confirmation_slider/src/state.dart';
+import 'dart:math';
+
+import 'package:confirm_slider/action_slider.dart';
+import 'package:confirm_slider/src/cross_fade.dart';
+import 'package:confirm_slider/src/mode.dart';
+import 'package:confirm_slider/src/state.dart';
 import 'package:flutter/material.dart';
 
 typedef BackgroundBuilder = Widget Function(
     BuildContext, double, double, double, Widget?);
 typedef ForegroundBuilder = Widget Function(
     BuildContext, double, double, double, Widget?, SliderMode);
-typedef SlideCallback = Function(
-    Function() loading, Function() success, Function() failure);
+typedef SlideCallback = Function(Function() loading, Function() success,
+    Function() failure, Function() reset);
 
-class ConfirmationSliderController extends ValueNotifier<SliderMode> {
-  ConfirmationSliderController() : super(SliderMode.standard);
+class ActionSliderController extends ValueNotifier<SliderMode> {
+  ActionSliderController() : super(SliderMode.standard);
 
+  ///Sets the state to success
   void success() => _setMode(SliderMode.success);
 
+  ///Sets the state to failure
   void failure() => _setMode(SliderMode.failure);
 
+  ///Resets the slider to its expanded state
   void reset() => _setMode(SliderMode.standard);
 
+  ///Sets the state to loading
   void loading() => _setMode(SliderMode.loading);
+
+  ///Allows to define custom [SliderMode]s.
+  ///This is useful for other results like success or failure.
+  ///You get this modes in the [foregroundBuilder] of [ConfirmationSlider.custom] or in the [customForegroundBuilder] of [ConfirmationSlider.standard].
+  void custom(SliderMode mode) => _setMode(mode);
 
   void _setMode(SliderMode mode) => value = mode;
 }
 
-class ConfirmationSlider extends StatefulWidget {
+class ActionSlider extends StatefulWidget {
+  final List<BoxShadow> boxShadow;
+
   ///The [Color] of the [Container] in the background.
   final Color? backgroundColor;
 
@@ -79,16 +93,16 @@ class ConfirmationSlider extends StatefulWidget {
   final Function? onSlide;
 
   ///Controller for controlling the widget from everywhere.
-  final ConfirmationSliderController? controller;
+  final ActionSliderController? controller;
 
   ///Constructor with very high customizability
-  const ConfirmationSlider.custom({
+  const ActionSlider.custom({
     Key? key,
     required this.backgroundBuilder,
     required this.foregroundBuilder,
-    this.toggleWidth = 40.0,
-    this.toggleHeight = 40.0,
-    this.height = 50.0,
+    this.toggleWidth = 55.0,
+    this.toggleHeight = 55.0,
+    this.height = 65.0,
     this.slideAnimationDuration = const Duration(milliseconds: 1000),
     this.backgroundColor,
     this.backgroundChild,
@@ -103,28 +117,39 @@ class ConfirmationSlider extends StatefulWidget {
     this.slideAnimationCurve = Curves.decelerate,
     this.reverseSlideAnimationCurve = Curves.bounceIn,
     this.loadingAnimationCurve = Curves.easeInOut,
-  })  : assert(onSlide is SlideCallback || onSlide is Function()),
+    this.boxShadow = const [
+      BoxShadow(
+        color: Colors.black26,
+        spreadRadius: 1,
+        blurRadius: 2,
+        offset: Offset(0, 2),
+      )
+    ],
+  })  : assert(onSlide == null ||
+            onSlide is SlideCallback ||
+            onSlide is Function()),
         super(key: key);
 
-  ///Standard constructor for creating a Slider
-  ConfirmationSlider.standard({
+  ///Standard constructor for creating a Slider.
+  ///If [customForegroundBuilder] is not null, the values of [successIcon], [failureIcon], [loadingIcon] and [icon] are ignored.
+  ///This is useful if you use your own [SliderMode]s.
+  ///You can also use [customForegroundBuilderChild] with the [customForegroundBuilder] for efficiency reasons.
+  ActionSlider.standard({
     Key? key,
     Widget? child,
-    Widget loadingIcon = const SizedBox(
-      width: 24.0,
-      height: 24.0,
-      child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2.0),
-    ),
+    Widget? loadingIcon,
     Widget successIcon = const Icon(Icons.check_rounded),
     Widget failureIcon = const Icon(Icons.close_rounded),
     Widget icon = const Icon(Icons.keyboard_arrow_right_rounded),
+    ForegroundBuilder? customForegroundBuilder,
+    Widget? customForegroundBuilderChild,
     Color? circleColor,
     Color? backgroundColor,
-    double height = 50.0,
-    double circleRadius = 20.0,
+    double height = 65.0,
+    double circleRadius = 25.0,
     bool rotating = false,
     Function? onSlide,
-    ConfirmationSliderController? controller,
+    ActionSliderController? controller,
     double? width,
     Duration slideAnimationDuration = const Duration(milliseconds: 250),
     Duration reverseSlideAnimationDuration = const Duration(milliseconds: 1000),
@@ -134,24 +159,37 @@ class ConfirmationSlider extends StatefulWidget {
     Curve loadingAnimationCurve = Curves.easeInOut,
     BorderRadius backgroundBorderRadius =
         const BorderRadius.all(Radius.circular(100.0)),
+    BorderRadius? foregroundBorderRadius,
+    List<BoxShadow> boxShadow = const [
+      BoxShadow(
+        color: Colors.black26,
+        spreadRadius: 1,
+        blurRadius: 2,
+        offset: Offset(0, 2),
+      )
+    ],
   }) : this.custom(
-          key: key,
+    key: key,
           backgroundChild: child,
           foregroundChild: icon,
           backgroundBuilder: _standardBackgroundBuilder,
           foregroundBuilder: (context, pos, width, height, child, mode) =>
               _standardForegroundBuilder(
-                  context,
-                  pos,
-                  width,
-                  height,
-                  mode,
-                  rotating,
-                  icon,
-                  loadingIcon,
-                  successIcon,
-                  failureIcon,
-                  circleColor),
+            context,
+            pos,
+            width,
+            height,
+            mode,
+            rotating,
+            icon,
+            loadingIcon,
+            successIcon,
+            failureIcon,
+            circleColor,
+            customForegroundBuilder,
+            customForegroundBuilderChild,
+            foregroundBorderRadius,
+          ),
           height: height,
           toggleWidth: circleRadius * 2,
           toggleHeight: circleRadius * 2,
@@ -166,6 +204,7 @@ class ConfirmationSlider extends StatefulWidget {
           reverseSlideAnimationCurve: reverseSlideAnimationCurve,
           loadingAnimationCurve: loadingAnimationCurve,
           backgroundBorderRadius: backgroundBorderRadius,
+          boxShadow: boxShadow,
         );
 
   static Widget _standardBackgroundBuilder(BuildContext context, double pos,
@@ -190,34 +229,53 @@ class ConfirmationSlider extends StatefulWidget {
     SliderMode mode,
     bool rotating,
     Widget icon,
-    Widget loadingIcon,
+    Widget? loadingIcon,
     Widget successIcon,
     Widget failureIcon,
     Color? circleColor,
+    ForegroundBuilder? customForegroundBuilder,
+    Widget? customForegroundBuilderChild,
+    BorderRadius? foregroundBorderRadius,
   ) {
+    loadingIcon ??= SizedBox(
+      width: 24.0,
+      height: 24.0,
+      child: CircularProgressIndicator(
+          strokeWidth: 2.0, color: Theme.of(context).iconTheme.color),
+    );
     double radius = height / 2;
 
     return Container(
       decoration: BoxDecoration(
-          shape: BoxShape.circle,
+          borderRadius: foregroundBorderRadius,
+          shape: foregroundBorderRadius == null
+              ? BoxShape.circle
+              : BoxShape.rectangle,
           color: circleColor ?? Theme.of(context).primaryColor),
       child: CrossFade<SliderMode>(
           current: mode,
           builder: (context, mode) {
-            switch (mode) {
-              case SliderMode.loading:
-                return Center(child: loadingIcon);
-              case SliderMode.success:
-                return Center(child: successIcon);
-              case SliderMode.failure:
-                return Center(child: failureIcon);
-              case SliderMode.standard:
-                return Center(
-                    child: rotating
-                        ? Transform.rotate(
-                            angle: pos * width / radius, child: icon)
-                        : icon);
+            if (customForegroundBuilder != null) {
+              return customForegroundBuilder(
+                context,
+                pos,
+                width,
+                height,
+                customForegroundBuilderChild,
+                mode,
+              );
             }
+            if (mode == SliderMode.loading) return Center(child: loadingIcon);
+            if (mode == SliderMode.success) return Center(child: successIcon);
+            if (mode == SliderMode.failure) return Center(child: failureIcon);
+            if (mode == SliderMode.standard) {
+              return Center(
+                  child: rotating
+                      ? Transform.rotate(
+                          angle: pos * width / radius, child: icon)
+                      : icon);
+            }
+            throw StateError('This should not happen :(');
           },
           size: (m1, m2) =>
               m2 == SliderMode.success || m2 == SliderMode.failure),
@@ -225,18 +283,18 @@ class ConfirmationSlider extends StatefulWidget {
   }
 
   @override
-  _ConfirmationSliderState createState() => _ConfirmationSliderState();
+  _ActionSliderState createState() => _ActionSliderState();
 }
 
-class _ConfirmationSliderState extends State<ConfirmationSlider>
+class _ActionSliderState extends State<ActionSlider>
     with TickerProviderStateMixin {
   late final AnimationController _slideAnimationController;
   late final AnimationController _loadingAnimationController;
   late final Animation<double> _slideAnimation;
   late final Animation<double> _loadingAnimation;
-  ConfirmationSliderController? _localController;
+  ActionSliderController? _localController;
 
-  ConfirmationSliderController get _controller =>
+  ActionSliderController get _controller =>
       widget.controller ?? _localController!;
   SliderState state = SliderState(position: 0.0, state: SlidingState.released);
 
@@ -266,12 +324,14 @@ class _ConfirmationSliderState extends State<ConfirmationSlider>
       }
     });
     _slideAnimation.addStatusListener((status) {
-      if (status == AnimationStatus.completed)
+      if (status == AnimationStatus.completed) {
         _slideAnimationController.reverse();
+      }
     });
 
-    if (widget.controller == null)
-      _localController = ConfirmationSliderController();
+    if (widget.controller == null) {
+      _localController = ActionSliderController();
+    }
     _controller.addListener(_onModeChange);
   }
 
@@ -284,7 +344,7 @@ class _ConfirmationSliderState extends State<ConfirmationSlider>
   }
 
   @override
-  void didUpdateWidget(covariant ConfirmationSlider oldWidget) {
+  void didUpdateWidget(covariant ActionSlider oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.controller != widget.controller) {
       _localController?.dispose();
@@ -292,36 +352,22 @@ class _ConfirmationSliderState extends State<ConfirmationSlider>
       if (widget.controller == null) {
         _localController = null;
       } else if (oldWidget.controller == null) {
-        _localController = ConfirmationSliderController();
+        _localController = ActionSliderController();
       }
       _controller.addListener(_onModeChange);
     }
   }
 
   void _onModeChange() {
-    SliderMode mode = _controller.value;
-    switch (mode) {
-      case SliderMode.loading:
-        _loadingAnimationController.forward();
-        setState(() => state =
-            state.copyWith(releasePosition: 1.0, state: SlidingState.loading));
-        break;
-      case SliderMode.success:
-        _loadingAnimationController.forward();
-        setState(() => state =
-            state.copyWith(releasePosition: 1.0, state: SlidingState.loading));
-        break;
-      case SliderMode.failure:
-        _loadingAnimationController.forward();
-        setState(() => state =
-            state.copyWith(releasePosition: 1.0, state: SlidingState.loading));
-        break;
-      case SliderMode.standard:
-        _slideAnimationController.reverse();
-        _loadingAnimationController.reverse();
-        setState(() => state =
-            state.copyWith(releasePosition: 1.0, state: SlidingState.released));
-        break;
+    if (_controller.value.expanded) {
+      _slideAnimationController.reverse();
+      _loadingAnimationController.reverse();
+      setState(() => state =
+          state.copyWith(releasePosition: 1.0, state: SlidingState.released));
+    } else {
+      _loadingAnimationController.forward();
+      setState(() => state =
+          state.copyWith(releasePosition: 1.0, state: SlidingState.loading));
     }
   }
 
@@ -333,7 +379,8 @@ class _ConfirmationSliderState extends State<ConfirmationSlider>
     //TODO: More efficiency by using separate widgets and child property of AnimatedBuilder
 
     return LayoutBuilder(builder: (context, constraints) {
-      final maxWidth = widget.width ?? constraints.maxWidth;
+      final maxWidth =
+          min(widget.width ?? double.infinity, constraints.maxWidth);
       final standardWidth = maxWidth - widget.toggleWidth - frame * 2;
       return AnimatedBuilder(
         builder: (context, child) {
@@ -395,6 +442,7 @@ class _ConfirmationSliderState extends State<ConfirmationSlider>
                 decoration: BoxDecoration(
                   color: widget.backgroundColor ?? theme.backgroundColor,
                   borderRadius: widget.backgroundBorderRadius,
+                  boxShadow: widget.boxShadow,
                 ),
                 height: widget.height,
                 child: Center(
@@ -452,12 +500,14 @@ class _ConfirmationSliderState extends State<ConfirmationSlider>
 
   void _onSlide() {
     if (widget.onSlide == null) return;
-    if (widget.onSlide is Function())
+    if (widget.onSlide is Function()) {
       widget.onSlide!();
-    else if (widget.onSlide is SlideCallback)
-      widget.onSlide!(
-          _controller.loading, _controller.success, _controller.failure);
-    else
-      throw ArgumentError('onSlide should be a Function() or a SlideCallback');
+    } else if (widget.onSlide is SlideCallback) {
+      widget.onSlide!(_controller.loading, _controller.success,
+          _controller.failure, _controller.reset);
+    } else {
+      throw ArgumentError(
+          'onSlide should be null, a Function() or a SlideCallback');
+    }
   }
 }

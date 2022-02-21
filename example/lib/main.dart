@@ -1,4 +1,4 @@
-import 'package:confirmation_slider/confirmation_slider.dart';
+import 'package:confirmation_slider/confirm_slider.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -30,7 +30,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final _controller = ConfirmationSliderController();
+  final _controller = ActionSliderController();
 
   @override
   Widget build(BuildContext context) {
@@ -44,18 +44,19 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            ConfirmationSlider.standard(
+            ActionSlider.standard(
               width: 300.0,
               child: const Text('Slide to confirm'),
-              successIcon: const Icon(Icons.check_rounded, color: Colors.white),
               onSlide: (loading, success, failure) async {
                 loading(); //or controller.loading()
                 await Future.delayed(const Duration(seconds: 3));
                 success(); //or controller.success()
+                await Future.delayed(const Duration(seconds: 1));
+                _controller.reset(); //for resetting the slider
               },
             ),
             const SizedBox(height: 24.0),
-            ConfirmationSlider.custom(
+            ActionSlider.custom(
               width: 300.0,
               controller: _controller,
               height: 60.0,
