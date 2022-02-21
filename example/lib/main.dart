@@ -1,4 +1,4 @@
-import 'package:confirmation_slider/confirm_slider.dart';
+import 'package:action_slider/action_slider.dart';
 import 'package:flutter/material.dart';
 
 void main() {

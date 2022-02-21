@@ -12,7 +12,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  confirmation_slider:
+  action_slider:
     path: '..'
 
 dev_dependencies:

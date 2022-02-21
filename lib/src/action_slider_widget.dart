@@ -1,9 +1,9 @@
 import 'dart:math';
 
-import 'package:confirm_slider/action_slider.dart';
-import 'package:confirm_slider/src/cross_fade.dart';
-import 'package:confirm_slider/src/mode.dart';
-import 'package:confirm_slider/src/state.dart';
+import 'package:action_slider/action_slider.dart';
+import 'package:action_slider/src/cross_fade.dart';
+import 'package:action_slider/src/mode.dart';
+import 'package:action_slider/src/state.dart';
 import 'package:flutter/material.dart';
 
 typedef BackgroundBuilder = Widget Function(
@@ -169,7 +169,7 @@ class ActionSlider extends StatefulWidget {
       )
     ],
   }) : this.custom(
-    key: key,
+          key: key,
           backgroundChild: child,
           foregroundChild: icon,
           backgroundBuilder: _standardBackgroundBuilder,

@@ -1,4 +1,4 @@
 library action_slider;
 
-export 'package:confirm_slider/src/action_slider_widget.dart';
-export 'package:confirm_slider/src/mode.dart';
+export 'package:action_slider/src/action_slider_widget.dart';
+export 'package:action_slider/src/mode.dart';
