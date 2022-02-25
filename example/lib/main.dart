@@ -47,12 +47,12 @@ class _MyHomePageState extends State<MyHomePage> {
             ActionSlider.standard(
               width: 300.0,
               child: const Text('Slide to confirm'),
-              onSlide: (loading, success, failure) async {
-                loading(); //or controller.loading()
+              onSlide: (controller) async {
+                controller.loading(); //starts loading animation
                 await Future.delayed(const Duration(seconds: 3));
-                success(); //or controller.success()
+                controller.success(); //starts success animation
                 await Future.delayed(const Duration(seconds: 1));
-                _controller.reset(); //for resetting the slider
+                controller.reset(); //resets the slider
               },
             ),
             const SizedBox(height: 24.0),
@@ -74,12 +74,12 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               backgroundBuilder: (context, pos, width, height, child) => child!,
               backgroundBorderRadius: BorderRadius.circular(5.0),
-              onSlide: (loading, success, failure) async {
-                loading(); //or controller.loading()
+              onSlide: (controller) async {
+                controller.loading(); //or controller.loading()
                 await Future.delayed(const Duration(seconds: 3));
-                success(); //or controller.success()
+                controller.success(); //or controller.success()
                 await Future.delayed(const Duration(seconds: 1));
-                _controller.reset(); //for resetting the slider
+                controller.reset(); //for resetting the slider
               },
             )
           ],

@@ -10,8 +10,7 @@ typedef BackgroundBuilder = Widget Function(
     BuildContext, double, double, double, Widget?);
 typedef ForegroundBuilder = Widget Function(
     BuildContext, double, double, double, Widget?, SliderMode);
-typedef SlideCallback = Function(Function() loading, Function() success,
-    Function() failure, Function() reset);
+typedef SlideCallback = Function(ActionSliderController controller);
 
 class ActionSliderController extends ValueNotifier<SliderMode> {
   ActionSliderController() : super(SliderMode.standard);
@@ -90,7 +89,7 @@ class ActionSlider extends StatefulWidget {
   ///Callback for sliding completely to the right.
   ///Here you should call the loading, success and failure methods of the [controller] for controlling the further behaviour/animations of the slider.
   ///Optionally [onSlide] can be a [SlideCallback] for using the widget without an external controller.
-  final Function? onSlide;
+  final SlideCallback? onSlide;
 
   ///Controller for controlling the widget from everywhere.
   final ActionSliderController? controller;
@@ -125,10 +124,7 @@ class ActionSlider extends StatefulWidget {
         offset: Offset(0, 2),
       )
     ],
-  })  : assert(onSlide == null ||
-            onSlide is SlideCallback ||
-            onSlide is Function()),
-        super(key: key);
+  }) : super(key: key);
 
   ///Standard constructor for creating a Slider.
   ///If [customForegroundBuilder] is not null, the values of [successIcon], [failureIcon], [loadingIcon] and [icon] are ignored.
@@ -148,7 +144,7 @@ class ActionSlider extends StatefulWidget {
     double height = 65.0,
     double circleRadius = 25.0,
     bool rotating = false,
-    Function? onSlide,
+    SlideCallback? onSlide,
     ActionSliderController? controller,
     double? width,
     Duration slideAnimationDuration = const Duration(milliseconds: 250),
@@ -275,7 +271,8 @@ class ActionSlider extends StatefulWidget {
                           angle: pos * width / radius, child: icon)
                       : icon);
             }
-            throw StateError('This should not happen :(');
+            throw StateError('For using custom SliderModes you have to '
+                'set customForegroundBuilder!');
           },
           size: (m1, m2) =>
               m2 == SliderMode.success || m2 == SliderMode.failure),
@@ -381,6 +378,10 @@ class _ActionSliderState extends State<ActionSlider>
     return LayoutBuilder(builder: (context, constraints) {
       final maxWidth =
           min(widget.width ?? double.infinity, constraints.maxWidth);
+      if (maxWidth == double.infinity) {
+        throw StateError('The constraints of the ActionSlider '
+            'are unbound and no width is set');
+      }
       final standardWidth = maxWidth - widget.toggleWidth - frame * 2;
       return AnimatedBuilder(
         builder: (context, child) {
@@ -499,15 +500,6 @@ class _ActionSliderState extends State<ActionSlider>
   }
 
   void _onSlide() {
-    if (widget.onSlide == null) return;
-    if (widget.onSlide is Function()) {
-      widget.onSlide!();
-    } else if (widget.onSlide is SlideCallback) {
-      widget.onSlide!(_controller.loading, _controller.success,
-          _controller.failure, _controller.reset);
-    } else {
-      throw ArgumentError(
-          'onSlide should be null, a Function() or a SlideCallback');
-    }
+    widget.onSlide?.call(_controller);
   }
 }

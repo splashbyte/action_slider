@@ -23,13 +23,11 @@ Easy to use and highly customizable.
 
 ```dart
 ActionSlider.standard(
-    width: 300.0,
     child: const Text('Slide to confirm'),
-    successIcon: const Icon(Icons.check_rounded, color: Colors.white),
-    onSlide: (loading, success, failure, reset) async {
-        loading(); //or controller.loading()
+    onSlide: (controller) async {
+        controller.loading(); //starts loading animation
         await Future.delayed(const Duration(seconds: 3));
-        success(); //or controller.success()
+        controller.success(); //starts success animation
     },
-),
+)
 ```

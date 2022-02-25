@@ -39,7 +39,11 @@ class _CrossFadeState<T> extends State<CrossFade<T>>
         if (status == AnimationStatus.completed) {
           if (todo.length <= 1) return;
           todo.removeAt(0);
-          if (todo.length > 1) _controller.forward(from: 0.0);
+          if (todo.length > 1) {
+            _controller.forward(from: 0.0);
+          } else {
+            _controller.value = 0.0;
+          }
         }
       });
 
@@ -66,8 +70,6 @@ class _CrossFadeState<T> extends State<CrossFade<T>>
         ),
       ],
     ).animate(_controller);
-
-    _controller.forward(from: 0.0);
   }
 
   @override
@@ -76,21 +78,14 @@ class _CrossFadeState<T> extends State<CrossFade<T>>
     super.dispose();
   }
 
-  Widget get current => Container(
-      key: _LocalKey(todo.first), child: widget.builder!(context, todo.first));
-
-  Widget? get next => todo.length > 1
-      ? Container(
-          key: _LocalKey(todo[1]), child: widget.builder!(context, todo[1]))
-      : null;
-
   @override
   Widget build(BuildContext context) {
     if (!widget.equals(widget.current, todo.last)) {
-      if (todo.length < 3)
+      if (todo.length < 3) {
         todo.add(widget.current);
-      else
+      } else {
         todo[todo.length - 1] = widget.current;
+      }
       if (!_controller.isAnimating) _controller.forward(from: 0.0);
     }
 
@@ -100,15 +95,21 @@ class _CrossFadeState<T> extends State<CrossFade<T>>
           : 1.0,
       child: Stack(
         children: [
-          if (!_opacityAnimation.isCompleted)
-            Opacity(opacity: 1 - _opacityAnimation.value, child: current),
-          Opacity(opacity: _opacityAnimation.value, child: next ?? current)
+          Opacity(
+              key: _LocalKey(todo[0]),
+              opacity: 1 - _opacityAnimation.value,
+              child: widget.builder!(context, todo[0])),
+          if (todo.length > 1)
+            Opacity(
+                key: _LocalKey(todo[1]),
+                opacity: _opacityAnimation.value,
+                child: widget.builder!(context, todo[1]))
         ],
       ),
     );
   }
 }
 
-class _LocalKey extends ValueKey {
-  const _LocalKey(value) : super(value);
+class _LocalKey<T> extends ValueKey<T> {
+  const _LocalKey(T value) : super(value);
 }
