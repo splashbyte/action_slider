@@ -1,3 +1,6 @@
+## 0.2.1 [2022-02-28]
+- changes README.md
+
 ## 0.2.0 [2022-02-28]
 - BREAKING: changes parameters of ForegroundBuilder and BackgroundBuilder
 - adds SliderBehaviour.stretch
