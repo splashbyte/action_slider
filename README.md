@@ -12,11 +12,8 @@
 A slider to confirm actions and provide feedback on the success of these after subsequent loading.  
 For a switch with a similar look, you can check out [animated_toggle_switch](https://pub.dev/packages/animated_toggle_switch).
 
-## Examples
-
-![action_slider](https://user-images.githubusercontent.com/43761463/147601537-a09d9772-abfa-4409-88c7-1f1e0f04c27a.gif)
-![action_slider_rolling](https://user-images.githubusercontent.com/43761463/147601547-ae8200b0-668c-4d1d-a7e5-80691e156a62.gif)
-![action_slider_custom](https://user-images.githubusercontent.com/43761463/147602062-87f55f38-9cbf-4a89-ae4d-48ca81317dca.gif)
+## Example
+![action_slider_example](https://user-images.githubusercontent.com/43761463/156018021-0b938616-9b56-45bd-9dc2-676c283966a9.gif)
 
 ## Easy Usage
 
