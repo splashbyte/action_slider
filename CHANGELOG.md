@@ -1,3 +1,7 @@
+## 0.2.0 [2022-02-28]
+- BREAKING: changes parameters of ForegroundBuilder and BackgroundBuilder
+- adds SliderBehaviour.stretch
+
 ## 0.1.2 [2022-02-25]
 - BREAKING: changes parameters of SlideCallback
 - optimizes fade animation

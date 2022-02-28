@@ -34,7 +34,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    var theme = Theme.of(context);
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -56,30 +56,130 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             ),
             const SizedBox(height: 24.0),
+            ActionSlider.standard(
+              sliderBehavior: SliderBehavior.stretch,
+              width: 300.0,
+              child: const Text('Slide to confirm'),
+              backgroundColor: Colors.white,
+              toggleColor: Colors.lightGreenAccent,
+              onSlide: (controller) async {
+                controller.loading(); //starts loading animation
+                await Future.delayed(const Duration(seconds: 3));
+                controller.success(); //starts success animation
+                await Future.delayed(const Duration(seconds: 1));
+                controller.reset(); //resets the slider
+              },
+            ),
+            const SizedBox(height: 24.0),
+            ActionSlider.standard(
+              rolling: true,
+              width: 300.0,
+              child: const Text('Rolling slider',
+                  style: TextStyle(color: Colors.white)),
+              backgroundColor: Colors.black,
+              reverseSlideAnimationCurve: Curves.easeInOut,
+              reverseSlideAnimationDuration: const Duration(milliseconds: 500),
+              toggleColor: Colors.purpleAccent,
+              icon: const Icon(Icons.add),
+              onSlide: (controller) async {
+                controller.loading(); //starts loading animation
+                await Future.delayed(const Duration(seconds: 3));
+                controller.success(); //starts success animation
+                await Future.delayed(const Duration(seconds: 1));
+                controller.reset(); //resets the slider
+              },
+            ),
+            const SizedBox(height: 24.0),
+            ActionSlider.standard(
+              sliderBehavior: SliderBehavior.stretch,
+              rolling: true,
+              width: 300.0,
+              child: const Text('Swipe right'),
+              backgroundColor: Colors.white,
+              toggleColor: Colors.amber,
+              iconAlignment: Alignment.centerRight,
+              loadingIcon: SizedBox(
+                  width: 50,
+                  child: Center(
+                      child: SizedBox(
+                    width: 24.0,
+                    height: 24.0,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2.0, color: theme.iconTheme.color),
+                  ))),
+              successIcon: const SizedBox(
+                  width: 50, child: Center(child: Icon(Icons.check_rounded))),
+              icon: const SizedBox(
+                  width: 50, child: Center(child: Icon(Icons.refresh_rounded))),
+              onSlide: (controller) async {
+                controller.loading(); //starts loading animation
+                await Future.delayed(const Duration(seconds: 3));
+                controller.success(); //starts success animation
+                await Future.delayed(const Duration(seconds: 1));
+                controller.reset(); //resets the slider
+              },
+            ),
+            const SizedBox(height: 24.0),
+            ActionSlider.custom(
+              sliderBehavior: SliderBehavior.stretch,
+              width: 300.0,
+              controller: _controller,
+              height: 60.0,
+              toggleWidth: 60.0,
+              toggleHeight: 60.0,
+              backgroundColor: Colors.green,
+              foregroundChild: DecoratedBox(
+                  decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(5)),
+                  child: const Icon(Icons.check_rounded, color: Colors.white)),
+              foregroundBuilder: (context, state, child) => child!,
+              backgroundBuilder: (context, state, child) => Container(
+                color: Color.lerp(Colors.red, Colors.green, state.position),
+                child: Center(
+                    child: Text(state.position.toStringAsFixed(2),
+                        style: theme.textTheme.subtitle1)),
+              ),
+              backgroundBorderRadius: BorderRadius.circular(5.0),
+              onSlide: (controller) async {
+                controller.loading(); //starts loading animation
+                await Future.delayed(const Duration(seconds: 3));
+                controller.success(); //starts success animation
+                await Future.delayed(const Duration(seconds: 1));
+                controller.reset(); //resets the slidere slider
+              },
+            ),
+            const SizedBox(height: 24.0),
             ActionSlider.custom(
               width: 300.0,
               controller: _controller,
               height: 60.0,
               backgroundColor: Colors.green,
               foregroundChild: Container(
-                  decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(5)),
+                  decoration: const BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.all(Radius.circular(27.5)),
+                  ),
                   child: const Icon(Icons.check_rounded, color: Colors.white)),
-              foregroundBuilder: (context, pos, width, height, child, mode) =>
-                  child!,
+              foregroundBuilder: (context, state, child) => child!,
               backgroundChild: Center(
                 child: Text('Highly Customizable :)',
                     style: theme.textTheme.subtitle1),
               ),
-              backgroundBuilder: (context, pos, width, height, child) => child!,
+              backgroundBuilder: (context, state, child) => ClipRect(
+                  child: OverflowBox(
+                      maxWidth: state.standardSize.width,
+                      maxHeight: state.toggleSize.height,
+                      minWidth: state.standardSize.width,
+                      minHeight: state.toggleSize.height,
+                      child: child!)),
               backgroundBorderRadius: BorderRadius.circular(5.0),
               onSlide: (controller) async {
-                controller.loading(); //or controller.loading()
+                controller.loading(); //starts loading animation
                 await Future.delayed(const Duration(seconds: 3));
-                controller.success(); //or controller.success()
+                controller.success(); //starts success animation
                 await Future.delayed(const Duration(seconds: 1));
-                controller.reset(); //for resetting the slider
+                controller.reset(); //resets the slideretting the slider
               },
             )
           ],

@@ -1,13 +1,17 @@
 class SliderMode {
   final dynamic key;
   final bool expanded;
+  final bool custom;
 
-  const SliderMode({required this.key, this.expanded = false});
+  const SliderMode({required this.key, this.expanded = false}) : custom = true;
 
-  static const loading = SliderMode(key: _SliderModeKey('loading'));
-  static const success = SliderMode(key: _SliderModeKey('success'));
-  static const failure = SliderMode(key: _SliderModeKey('failure'));
-  static const standard = SliderMode(
+  const SliderMode._internal({required this.key, this.expanded = false})
+      : custom = false;
+
+  static const loading = SliderMode._internal(key: _SliderModeKey('loading'));
+  static const success = SliderMode._internal(key: _SliderModeKey('success'));
+  static const failure = SliderMode._internal(key: _SliderModeKey('failure'));
+  static const standard = SliderMode._internal(
     key: _SliderModeKey('standard'),
     expanded: true,
   );
@@ -17,10 +21,11 @@ class SliderMode {
       identical(this, other) ||
       other is SliderMode &&
           runtimeType == other.runtimeType &&
-          key == other.key;
+          key == other.key &&
+          custom == other.custom;
 
   @override
-  int get hashCode => key.hashCode;
+  int get hashCode => key.hashCode ^ custom.hashCode;
 }
 
 class _SliderModeKey {
