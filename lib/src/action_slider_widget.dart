@@ -4,6 +4,7 @@ import 'package:action_slider/action_slider.dart';
 import 'package:action_slider/src/cross_fade.dart';
 import 'package:action_slider/src/mode.dart';
 import 'package:action_slider/src/state.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 enum SliderBehavior { move, stretch }
@@ -13,9 +14,14 @@ typedef BackgroundBuilder = Widget Function(
 typedef ForegroundBuilder = Widget Function(
     BuildContext, ActionSliderState, Widget?);
 typedef SlideCallback = Function(ActionSliderController controller);
+typedef TapCallback = Function(ActionSliderController controller);
 
-class ActionSliderController extends ValueNotifier<SliderMode> {
-  ActionSliderController() : super(SliderMode.standard);
+class ActionSliderController extends ChangeNotifier
+    implements ValueListenable<SliderMode> {
+  SliderMode _value = SliderMode.standard;
+
+  @override
+  SliderMode get value => _value;
 
   ///Sets the state to success
   void success() => _setMode(SliderMode.success);
@@ -29,12 +35,19 @@ class ActionSliderController extends ValueNotifier<SliderMode> {
   ///Sets the state to loading
   void loading() => _setMode(SliderMode.loading);
 
+  ///The Toggle jumps to [pos] which should be between 0.0 and 1.0.
+  void jump([double pos = 0.3]) => _setMode(SliderMode.jump(pos));
+
   ///Allows to define custom [SliderMode]s.
   ///This is useful for other results like success or failure.
   ///You get this modes in the [foregroundBuilder] of [ConfirmationSlider.custom] or in the [customForegroundBuilder] of [ConfirmationSlider.standard].
   void custom(SliderMode mode) => _setMode(mode);
 
-  void _setMode(SliderMode mode) => value = mode;
+  void _setMode(SliderMode mode, {bool notify = true}) {
+    if (value == mode) return;
+    _value = mode;
+    if (notify) notifyListeners();
+  }
 }
 
 class ActionSlider extends StatefulWidget {
@@ -89,9 +102,16 @@ class ActionSlider extends StatefulWidget {
   final BorderRadius backgroundBorderRadius;
 
   ///Callback for sliding completely to the right.
-  ///Here you should call the loading, success and failure methods of the [controller] for controlling the further behaviour/animations of the slider.
-  ///Optionally [onSlide] can be a [SlideCallback] for using the widget without an external controller.
+  ///Here you should call the loading, success and failure methods of the
+  ///[controller] for controlling the further behaviour/animations of the
+  ///slider.
   final SlideCallback? onSlide;
+
+  ///Callback for tapping on the [ActionSlider]. Defaults to (c) => c.jump().
+  ///Is only called if the toggle is currently not dragged.
+  ///If you want onTap to be called in any case, you should wrap ActionSlider
+  ///in a GestureDetector.
+  final TapCallback? onTap;
 
   ///Controller for controlling the widget from everywhere.
   final ActionSliderController? controller;
@@ -130,7 +150,10 @@ class ActionSlider extends StatefulWidget {
       )
     ],
     this.sliderBehavior = SliderBehavior.move,
+    this.onTap = _defaultOnTap,
   }) : super(key: key);
+
+  static _defaultOnTap(ActionSliderController c) => c.jump();
 
   ///Standard constructor for creating a Slider.
   ///If [customForegroundBuilder] is not null, the values of [successIcon], [failureIcon], [loadingIcon] and [icon] are ignored.
@@ -151,6 +174,7 @@ class ActionSlider extends StatefulWidget {
     double circleRadius = 25.0,
     bool rolling = false,
     SlideCallback? onSlide,
+    TapCallback? onTap = _defaultOnTap,
     ActionSliderController? controller,
     double? width,
     Duration slideAnimationDuration = const Duration(milliseconds: 250),
@@ -197,6 +221,7 @@ class ActionSlider extends StatefulWidget {
             toggleHeight: circleRadius * 2,
             backgroundColor: backgroundColor,
             onSlide: onSlide,
+            onTap: onTap,
             controller: controller,
             width: width,
             slideAnimationDuration: slideAnimationDuration,
@@ -281,7 +306,7 @@ class ActionSlider extends StatefulWidget {
               child = successIcon;
             } else if (mode == SliderMode.failure) {
               child = failureIcon;
-            } else if (mode == SliderMode.standard) {
+            } else if (mode == SliderMode.standard || mode.isJump) {
               child = rotating
                   ? Transform.rotate(
                       angle: state.position * state.size.width / radius,
@@ -385,8 +410,14 @@ class _ActionSliderState extends State<ActionSlider>
     if (_controller.value.expanded) {
       _slideAnimationController.reverse();
       _loadingAnimationController.reverse();
-      setState(() => state =
-          state.copyWith(releasePosition: 1.0, state: SlidingState.released));
+      if (_controller.value.jumpPosition > 0.0) {
+        _controller._setMode(SliderMode.standard, notify: false);
+        state = state.copyWith(releasePosition: 0.3);
+        _slideAnimationController.forward();
+      } else {
+        setState(() => state =
+            state.copyWith(releasePosition: 1.0, state: SlidingState.released));
+      }
     } else {
       _loadingAnimationController.forward();
       setState(() => state =
@@ -429,49 +460,9 @@ class _ActionSliderState extends State<ActionSlider>
           }
 
           return GestureDetector(
-            onHorizontalDragStart: (details) {
-              final x = details.localPosition.dx;
-              if (x >= togglePosition && x <= toggleWidth) {
-                setState(() {
-                  state = SliderState(
-                    position: ((details.localPosition.dx -
-                                frame -
-                                widget.toggleWidth / 2) /
-                            backgroundWidth)
-                        .clamp(0.0, 1.0),
-                    state: SlidingState.dragged,
-                  );
-                });
-              }
-            },
-            onHorizontalDragUpdate: (details) {
-              if (state.state == SlidingState.dragged) {
-                double newPosition = ((details.localPosition.dx -
-                            frame -
-                            widget.toggleWidth / 2) /
-                        backgroundWidth)
-                    .clamp(0.0, 1.0);
-                setState(() {
-                  state = SliderState(
-                    position: newPosition,
-                    state: newPosition < 1.0
-                        ? SlidingState.dragged
-                        : SlidingState.released,
-                  );
-                });
-                if (state.state == SlidingState.released) _onSlide();
-              }
-            },
-            onHorizontalDragEnd: (details) => setState(() {
-              state = state.copyWith(
-                  state: SlidingState.released,
-                  releasePosition: state.position);
-              _slideAnimationController.reverse(from: 1.0);
-            }),
             onTap: () {
               if (state.state != SlidingState.released) return;
-              state = state.copyWith(releasePosition: 0.3);
-              _slideAnimationController.forward();
+              widget.onTap?.call(_controller);
             },
             child: Container(
               width: width,
@@ -508,26 +499,63 @@ class _ActionSliderState extends State<ActionSlider>
                       left: togglePosition,
                       width: toggleWidth,
                       height: widget.toggleHeight,
-                      child: MouseRegion(
-                        cursor: state.state == SlidingState.loading
-                            ? MouseCursor.defer
-                            : (state.state == SlidingState.released
-                                ? SystemMouseCursors.grab
-                                : SystemMouseCursors.grabbing),
-                        child: Builder(
-                          builder: (context) => widget.foregroundBuilder(
-                            context,
-                            ActionSliderState(
-                              position: state.position,
-                              size: Size(width, widget.height),
-                              standardSize: Size(maxWidth, widget.height),
-                              slidingState: state.state,
-                              sliderMode: _controller.value,
-                              releasePosition: state.releasePosition,
-                              toggleSize:
-                                  Size(toggleWidth, widget.toggleHeight),
+                      child: GestureDetector(
+                        onHorizontalDragStart: (details) {
+                          setState(() {
+                            state = SliderState(
+                              position: ((details.localPosition.dx -
+                                          widget.toggleWidth / 2) /
+                                      backgroundWidth)
+                                  .clamp(0.0, 1.0),
+                              state: SlidingState.dragged,
+                            );
+                          });
+                        },
+                        onHorizontalDragUpdate: (details) {
+                          if (state.state == SlidingState.dragged) {
+                            double newPosition = ((details.localPosition.dx -
+                                        widget.toggleWidth / 2) /
+                                    backgroundWidth)
+                                .clamp(0.0, 1.0);
+                            setState(() {
+                              state = SliderState(
+                                position: newPosition,
+                                state: newPosition < 1.0
+                                    ? SlidingState.dragged
+                                    : SlidingState.released,
+                              );
+                            });
+                            if (state.state == SlidingState.released)
+                              _onSlide();
+                          }
+                        },
+                        onHorizontalDragEnd: (details) => setState(() {
+                          state = state.copyWith(
+                              state: SlidingState.released,
+                              releasePosition: state.position);
+                          _slideAnimationController.reverse(from: 1.0);
+                        }),
+                        child: MouseRegion(
+                          cursor: state.state == SlidingState.loading
+                              ? MouseCursor.defer
+                              : (state.state == SlidingState.released
+                                  ? SystemMouseCursors.grab
+                                  : SystemMouseCursors.grabbing),
+                          child: Builder(
+                            builder: (context) => widget.foregroundBuilder(
+                              context,
+                              ActionSliderState(
+                                position: state.position,
+                                size: Size(width, widget.height),
+                                standardSize: Size(maxWidth, widget.height),
+                                slidingState: state.state,
+                                sliderMode: _controller.value,
+                                releasePosition: state.releasePosition,
+                                toggleSize:
+                                    Size(toggleWidth, widget.toggleHeight),
+                              ),
+                              widget.foregroundChild,
                             ),
-                            widget.foregroundChild,
                           ),
                         ),
                       ),

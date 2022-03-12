@@ -1,3 +1,8 @@
+## 0.3.0 [2022-03-12]
+- adds onTap parameter
+- adds jump method to ActionSliderController
+- minor gesture detection improvements
+
 ## 0.2.1 [2022-02-28]
 - changes README.md
 
