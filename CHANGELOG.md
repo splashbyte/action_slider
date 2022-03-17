@@ -4,9 +4,9 @@
 - adds `crossFadeDuration`, `customBackgroundBuilder`, `customBackgroundBuilderChild`, `customOuterBackgroundBuilder` and `customOuterBackgroundBuilderChild` to constructor `ActionSlider.standard`
 - BREAKING: renames `SlidingState.loading` to `SlidingState.compact`
 - BREAKING: renames `CrossFade` to `SliderCrossFade`
-- BREAKING change for constructor `ActionSlider.custom`:
+- BREAKING change for constructor `ActionSlider.standard`:
   - removes `circleRadius` and adds `borderWidth` instead
-- BREAKING changes for constructor `ActionSlider.custom`:
+- BREAKING change for constructor `ActionSlider.custom`:
   - removes `toggleHeight` and adds `toggleMargin` instead
 
 ## 0.3.0 [2022-03-12]
