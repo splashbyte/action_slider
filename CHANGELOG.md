@@ -1,5 +1,5 @@
 ## 0.4.0 [2022-03-17]
-- improves flexibility of constructor `ActionSlider.custom`
+- major customizability improvements
 - adds `outerBackgroundBuilder` and `outerBackgroundChild` to constructor `ActionSlider.custom`
 - adds `crossFadeDuration`, `customBackgroundBuilder`, `customBackgroundBuilderChild`, `customOuterBackgroundBuilder` and `customOuterBackgroundBuilderChild` to constructor `ActionSlider.standard`
 - BREAKING: renames `SlidingState.loading` to `SlidingState.compact`
