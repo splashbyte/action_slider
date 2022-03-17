@@ -171,6 +171,9 @@ class ActionSlider extends StatefulWidget {
   ///This is useful if you use your own [SliderMode]s.
   ///You can also use [customForegroundBuilderChild] with the [customForegroundBuilder] for efficiency reasons.
   ///
+  ///If [customBackgroundBuilder] is not null, the value of [child] is ignored.
+  ///You can also use [customBackgroundBuilderChild] with the [customBackgroundBuilder] for efficiency reasons.
+  ///
   ///If [customOuterBackgroundBuilder] is not null, the values of [backgroundColor], [backgroundBorderRadius] and [boxShadow] are ignored.
   ///You can also use [customOuterBackgroundBuilderChild] with the [customOuterBackgroundBuilder] for efficiency reasons.
   ActionSlider.standard({
