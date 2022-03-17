@@ -1,32 +1,53 @@
 class SliderMode {
+  ///A unique key for this mode, which is used for the equals method.
   final dynamic key;
+
+  ///Specifies the slider to be expanded in this mode. Otherwise it is compact.
   final bool expanded;
+
+  ///Indicates whether this mode is not native provided by this package.
   final bool custom;
+
+  ///Indicates whether this mode is a result like [success] and [failure].
+  ///If so, by default the change is highlighted more clearly in the slider.
+  final bool result;
+
+  ///Specifies how far the toggle should jump between 0 and 1.
+  ///To adjust this value, please use [SliderMode.jump].
   final double jumpPosition;
 
-  const SliderMode({required this.key, this.expanded = false})
-      : jumpPosition = 0.0,
+  const SliderMode({
+    required this.key,
+    this.expanded = false,
+    this.result = false,
+  })  : jumpPosition = 0.0,
         custom = true;
 
   const SliderMode._internal({
     required this.key,
     this.expanded = false,
+    this.result = false,
     this.jumpPosition = 0.0,
   }) : custom = false;
 
-  static const loading = SliderMode._internal(key: _SliderModeKey('loading'));
-  static const success = SliderMode._internal(key: _SliderModeKey('success'));
-  static const failure = SliderMode._internal(key: _SliderModeKey('failure'));
+  static const loading =
+      SliderMode._internal(key: _SliderModeKey('loading'), result: false);
+  static const success =
+      SliderMode._internal(key: _SliderModeKey('success'), result: true);
+  static const failure =
+      SliderMode._internal(key: _SliderModeKey('failure'), result: true);
   static const standard = SliderMode._internal(
     key: _SliderModeKey('standard'),
     expanded: true,
+    result: false,
   );
 
-  bool get isJump => key == 'jump' && !custom;
+  ///Indicates whether this mode is a [SliderMode.jump].
+  bool get isJump => key == const _SliderModeKey('jump');
 
   const SliderMode.jump(double pos)
       : this._internal(
-          key: 'jump',
+          key: const _SliderModeKey('jump'),
           expanded: true,
           jumpPosition: pos,
         );

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 
-class CrossFade<T> extends StatefulWidget {
+///A simple widget for handling crossfades.
+///For a more customizable crossfade widget you can use the package cross_fade.
+class SliderCrossFade<T> extends StatefulWidget {
   final T current;
   final Widget Function(BuildContext, T)? builder;
   final Duration duration;
   final bool Function(T, T) equals;
   final bool Function(T, T)? size;
 
-  const CrossFade(
+  const SliderCrossFade(
       {Key? key,
       this.duration = const Duration(milliseconds: 750),
       required this.current,
@@ -19,10 +21,10 @@ class CrossFade<T> extends StatefulWidget {
   static bool _standardEquals(dynamic t1, dynamic t2) => t1 == t2;
 
   @override
-  _CrossFadeState<T> createState() => _CrossFadeState<T>();
+  _SliderCrossFadeState<T> createState() => _SliderCrossFadeState<T>();
 }
 
-class _CrossFadeState<T> extends State<CrossFade<T>>
+class _SliderCrossFadeState<T> extends State<SliderCrossFade<T>>
     with SingleTickerProviderStateMixin {
   late List<T> todo;
   late AnimationController _controller;
@@ -79,16 +81,25 @@ class _CrossFadeState<T> extends State<CrossFade<T>>
   }
 
   @override
-  Widget build(BuildContext context) {
+  void didUpdateWidget(covariant SliderCrossFade<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
     if (!widget.equals(widget.current, todo.last)) {
       if (todo.length < 3) {
         todo.add(widget.current);
       } else {
-        todo[todo.length - 1] = widget.current;
+        if (!widget.equals(widget.current, todo[1])) {
+          todo[todo.length - 1] = widget.current;
+        } else {
+          todo.removeLast();
+        }
       }
       if (!_controller.isAnimating) _controller.forward(from: 0.0);
     }
+    _controller.duration = widget.duration;
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Transform.scale(
       scale: todo.length > 1 && (widget.size?.call(todo[0], todo[1]) ?? false)
           ? _sizeAnimation.value

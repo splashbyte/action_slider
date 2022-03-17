@@ -1,7 +1,9 @@
 ## 0.4.0 [2022-03-17]
 - improves flexibility of constructor `ActionSlider.custom`
-- adds `outerBackgroundBuilder` and `outerBackgroundChild` in `ActionSlider.custom`
+- adds `outerBackgroundBuilder` and `outerBackgroundChild` to constructor `ActionSlider.custom`
+- adds `crossFadeDuration`, `customBackgroundBuilder`, `customBackgroundBuilderChild`, `customOuterBackgroundBuilder` and `customOuterBackgroundBuilderChild` to constructor `ActionSlider.standard`
 - BREAKING: renames `SlidingState.loading` to `SlidingState.compact`
+- BREAKING: renames `CrossFade` to `SliderCrossFade`
 - BREAKING change for constructor `ActionSlider.custom`:
   - removes `circleRadius` and adds `borderWidth` instead
 - BREAKING changes for constructor `ActionSlider.custom`:

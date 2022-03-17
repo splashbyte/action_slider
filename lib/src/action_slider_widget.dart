@@ -166,9 +166,13 @@ class ActionSlider extends StatefulWidget {
   static _defaultOnTap(ActionSliderController c) => c.jump();
 
   ///Standard constructor for creating a Slider.
+  ///
   ///If [customForegroundBuilder] is not null, the values of [successIcon], [failureIcon], [loadingIcon] and [icon] are ignored.
   ///This is useful if you use your own [SliderMode]s.
   ///You can also use [customForegroundBuilderChild] with the [customForegroundBuilder] for efficiency reasons.
+  ///
+  ///If [customOuterBackgroundBuilder] is not null, the values of [backgroundColor], [backgroundBorderRadius] and [boxShadow] are ignored.
+  ///You can also use [customOuterBackgroundBuilderChild] with the [customOuterBackgroundBuilder] for efficiency reasons.
   ActionSlider.standard({
     Key? key,
     Widget? child,
@@ -178,6 +182,10 @@ class ActionSlider extends StatefulWidget {
     Widget icon = const Icon(Icons.keyboard_arrow_right_rounded),
     ForegroundBuilder? customForegroundBuilder,
     Widget? customForegroundBuilderChild,
+    BackgroundBuilder? customBackgroundBuilder,
+    Widget? customBackgroundBuilderChild,
+    BackgroundBuilder? customOuterBackgroundBuilder,
+    Widget? customOuterBackgroundBuilderChild,
     Color? toggleColor,
     Color? backgroundColor,
     double height = 65.0,
@@ -190,6 +198,7 @@ class ActionSlider extends StatefulWidget {
     Duration slideAnimationDuration = const Duration(milliseconds: 250),
     Duration reverseSlideAnimationDuration = const Duration(milliseconds: 1000),
     Duration loadingAnimationDuration = const Duration(milliseconds: 350),
+    Duration crossFadeDuration = const Duration(milliseconds: 250),
     Curve slideAnimationCurve = Curves.decelerate,
     Curve reverseSlideAnimationCurve = Curves.bounceIn,
     Curve loadingAnimationCurve = Curves.easeInOut,
@@ -208,9 +217,10 @@ class ActionSlider extends StatefulWidget {
     SliderBehavior sliderBehavior = SliderBehavior.move,
   }) : this.custom(
             key: key,
-            backgroundChild: child,
-            foregroundChild: icon,
-            backgroundBuilder: _standardBackgroundBuilder,
+            backgroundChild: customBackgroundBuilderChild,
+            backgroundBuilder: customBackgroundBuilder ??
+                (context, state, _) =>
+                    _standardBackgroundBuilder(context, state, child),
             foregroundBuilder: (context, state, child) =>
                 _standardForegroundBuilder(
                   context,
@@ -225,7 +235,10 @@ class ActionSlider extends StatefulWidget {
                   customForegroundBuilderChild,
                   foregroundBorderRadius,
                   iconAlignment,
+                  crossFadeDuration,
                 ),
+            outerBackgroundBuilder: customOuterBackgroundBuilder,
+            outerBackgroundChild: customOuterBackgroundBuilderChild,
             height: height,
             toggleWidth: height - borderWidth * 2,
             toggleMargin: EdgeInsets.all(borderWidth),
@@ -302,6 +315,7 @@ class ActionSlider extends StatefulWidget {
     Widget? customForegroundBuilderChild,
     BorderRadius? foregroundBorderRadius,
     AlignmentGeometry iconAlignment,
+    Duration crossFadeDuration,
   ) {
     loadingIcon ??= SizedBox(
       width: 24.0,
@@ -316,37 +330,38 @@ class ActionSlider extends StatefulWidget {
           borderRadius: foregroundBorderRadius ??
               BorderRadius.circular(state.toggleSize.height / 2),
           color: circleColor ?? Theme.of(context).primaryColor),
-      child: CrossFade<SliderMode>(
-          current: state.sliderMode,
-          builder: (context, mode) {
-            if (customForegroundBuilder != null) {
-              return customForegroundBuilder(
-                context,
-                state,
-                customForegroundBuilderChild,
-              );
-            }
-            Widget? child;
-            if (mode == SliderMode.loading) {
-              child = loadingIcon;
-            } else if (mode == SliderMode.success) {
-              child = successIcon;
-            } else if (mode == SliderMode.failure) {
-              child = failureIcon;
-            } else if (mode == SliderMode.standard || mode.isJump) {
-              child = rotating
-                  ? Transform.rotate(
-                      angle: state.position * state.size.width / radius,
-                      child: icon)
-                  : icon;
-            } else {
-              throw StateError('For using custom SliderModes you have to '
-                  'set customForegroundBuilder!');
-            }
-            return Align(alignment: iconAlignment, child: child);
-          },
-          size: (m1, m2) =>
-              m2 == SliderMode.success || m2 == SliderMode.failure),
+      child: SliderCrossFade<SliderMode>(
+        duration: crossFadeDuration * (1 / 0.3),
+        current: state.sliderMode,
+        builder: (context, mode) {
+          if (customForegroundBuilder != null) {
+            return customForegroundBuilder(
+              context,
+              state,
+              customForegroundBuilderChild,
+            );
+          }
+          Widget? child;
+          if (mode == SliderMode.loading) {
+            child = loadingIcon;
+          } else if (mode == SliderMode.success) {
+            child = successIcon;
+          } else if (mode == SliderMode.failure) {
+            child = failureIcon;
+          } else if (mode == SliderMode.standard || mode.isJump) {
+            child = rotating
+                ? Transform.rotate(
+                    angle: state.position * state.size.width / radius,
+                    child: icon)
+                : icon;
+          } else {
+            throw StateError('For using custom SliderModes you have to '
+                'set customForegroundBuilder!');
+          }
+          return Align(alignment: iconAlignment, child: child);
+        },
+        size: (m1, m2) => m2.result,
+      ),
     );
   }
 

@@ -10,7 +10,7 @@ class SliderState {
   SliderState(
       {required this.position,
       required this.state,
-      this.releasePosition = 1.0});
+      this.releasePosition = 0.0});
 
   SliderState copyWith(
           {double? position, SlidingState? state, double? releasePosition}) =>
@@ -34,7 +34,7 @@ class BaseActionSliderState {
 
   /// The position at which the toggle was released.
   /// Is only relevant if the [slidingState] is [SlidingState.released].
-  /// Otherwise it is always 1.0.
+  /// The default value is 0.0.
   final double releasePosition;
 
   BaseActionSliderState({
