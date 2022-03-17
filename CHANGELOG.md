@@ -7,7 +7,7 @@
 - BREAKING change for constructor `ActionSlider.custom`:
   - removes `circleRadius` and adds `borderWidth` instead
 - BREAKING changes for constructor `ActionSlider.custom`:
-  - removes `toggleWidth` and adds `toggleMargin` instead
+  - removes `toggleHeight` and adds `toggleMargin` instead
 
 ## 0.3.0 [2022-03-12]
 - adds `onTap` parameter
