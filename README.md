@@ -27,5 +27,17 @@ ActionSlider.standard(
         await Future.delayed(const Duration(seconds: 3));
         controller.success(); //starts success animation
     },
+    ... //many more parameters
+)
+```
+
+Maximum customizability with `ActionSlider.custom`.
+```dart
+ActionSlider.custom(
+    foregroundBuilder: (context, state, child) => ...,
+    backgroundBuilder: (context, state, child) => ...,
+    outerBackgroundBuilder: (context, state, child) => ...,
+    onSlide: (controller) => ...,
+    ... //many more parameters
 )
 ```
