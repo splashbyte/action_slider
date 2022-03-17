@@ -264,7 +264,6 @@ class ActionSlider extends StatefulWidget {
     double? width,
   ) {
     return (context, state, child) => Container(
-          clipBehavior: Clip.antiAlias,
           width: width,
           decoration: BoxDecoration(
             color: backgroundColor ?? Theme.of(context).backgroundColor,
