@@ -435,9 +435,9 @@ class _ActionSliderState extends State<ActionSlider>
       _localController?.dispose();
       oldWidget.controller?.removeListener(_onModeChange);
       if (widget.controller == null) {
-        _localController = null;
-      } else if (oldWidget.controller == null) {
         _localController = ActionSliderController();
+      } else {
+        _localController = null;
       }
       _controller.addListener(_onModeChange);
     }
