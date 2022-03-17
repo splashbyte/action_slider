@@ -1,7 +1,7 @@
 import 'package:action_slider/action_slider.dart';
 import 'package:flutter/material.dart';
 
-enum SlidingState { dragged, released, loading }
+enum SlidingState { dragged, released, compact }
 
 class SliderState {
   final double position, releasePosition;
@@ -21,15 +21,9 @@ class SliderState {
       );
 }
 
-class ActionSliderState {
+class BaseActionSliderState {
   /// The current position of the toggle.
   final double position;
-
-  /// The size of the [ActionSlider].
-  final Size size;
-
-  /// The size of the [ActionSlider] which it has in expanded form.
-  final Size standardSize;
 
   /// The current [SlidingState] of the [ActionSlider].
   final SlidingState slidingState;
@@ -43,16 +37,36 @@ class ActionSliderState {
   /// Otherwise it is always 1.0.
   final double releasePosition;
 
+  BaseActionSliderState({
+    required this.position,
+    required this.slidingState,
+    required this.sliderMode,
+    required this.releasePosition,
+  });
+}
+
+class ActionSliderState extends BaseActionSliderState {
+  /// The size of the [ActionSlider].
+  final Size size;
+
+  /// The size of the [ActionSlider] which it has in expanded form.
+  final Size standardSize;
+
   /// The current size of the toggle.
   final Size toggleSize;
 
   ActionSliderState({
-    required this.position,
+    required double position,
+    required SlidingState slidingState,
+    required SliderMode sliderMode,
+    required double releasePosition,
     required this.size,
-    required this.slidingState,
-    required this.sliderMode,
-    required this.releasePosition,
-    required this.toggleSize,
     required this.standardSize,
-  });
+    required this.toggleSize,
+  }) : super(
+          position: position,
+          slidingState: slidingState,
+          sliderMode: sliderMode,
+          releasePosition: releasePosition,
+        );
 }

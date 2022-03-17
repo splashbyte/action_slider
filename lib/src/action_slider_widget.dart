@@ -36,7 +36,8 @@ class ActionSliderController extends ChangeNotifier
   void loading() => _setMode(SliderMode.loading);
 
   ///The Toggle jumps to [pos] which should be between 0.0 and 1.0.
-  void jump([double pos = 0.3]) => _setMode(SliderMode.jump(pos));
+  void jump([double pos = 0.3]) =>
+      _setMode(SliderMode.jump(pos.clamp(0.0, 1.0)));
 
   ///Allows to define custom [SliderMode]s.
   ///This is useful for other results like success or failure.
@@ -51,16 +52,11 @@ class ActionSliderController extends ChangeNotifier
 }
 
 class ActionSlider extends StatefulWidget {
-  final List<BoxShadow> boxShadow;
-
-  ///The [Color] of the [Container] in the background.
-  final Color? backgroundColor;
-
   ///The width of the sliding toggle.
   final double toggleWidth;
 
-  ///The height of the sliding toggle.
-  final double toggleHeight;
+  ///The margin of the sliding toggle.
+  final EdgeInsetsGeometry toggleMargin;
 
   ///The total width of the widget. If this is [null] it uses the whole available width.
   final double? width;
@@ -68,11 +64,17 @@ class ActionSlider extends StatefulWidget {
   ///The total height of the widget.
   final double height;
 
+  ///The child which is optionally given to the [outerBackgroundBuilder] for efficiency reasons.
+  final Widget? outerBackgroundChild;
+
+  ///The builder for outer background. Overwrites [backgroundColor], [backgroundBorderRadius] and [boxShadow].
+  final BackgroundBuilder? outerBackgroundBuilder;
+
   ///The child which is optionally given to the [backgroundBuilder] for efficiency reasons.
   final Widget? backgroundChild;
 
-  ///The builder for the background.
-  final BackgroundBuilder backgroundBuilder;
+  ///The builder for the background of the toggle.
+  final BackgroundBuilder? backgroundBuilder;
 
   ///The child which is optionally given to the [foregroundBuilder] for efficiency reasons.
   final Widget? foregroundChild;
@@ -98,8 +100,14 @@ class ActionSlider extends StatefulWidget {
   ///The curve for going into the loading mode.
   final Curve loadingAnimationCurve;
 
+  ///The [Color] of the [Container] in the background.
+  final Color? backgroundColor;
+
   ///[BorderRadius] of the [Container] in the background.
   final BorderRadius backgroundBorderRadius;
+
+  ///The [BoxShadow] of the background [Container].
+  final List<BoxShadow> boxShadow;
 
   ///Callback for sliding completely to the right.
   ///Here you should call the loading, success and failure methods of the
@@ -122,13 +130,15 @@ class ActionSlider extends StatefulWidget {
   ///Constructor with very high customizability
   const ActionSlider.custom({
     Key? key,
-    required this.backgroundBuilder,
+    this.outerBackgroundBuilder,
+    this.backgroundBuilder,
     required this.foregroundBuilder,
     this.toggleWidth = 55.0,
-    this.toggleHeight = 55.0,
+    this.toggleMargin = const EdgeInsets.all(5.0),
     this.height = 65.0,
     this.slideAnimationDuration = const Duration(milliseconds: 1000),
     this.backgroundColor,
+    this.outerBackgroundChild,
     this.backgroundChild,
     this.foregroundChild,
     this.backgroundBorderRadius =
@@ -171,7 +181,7 @@ class ActionSlider extends StatefulWidget {
     Color? toggleColor,
     Color? backgroundColor,
     double height = 65.0,
-    double circleRadius = 25.0,
+    double borderWidth = 5.0,
     bool rolling = false,
     SlideCallback? onSlide,
     TapCallback? onTap = _defaultOnTap,
@@ -217,8 +227,8 @@ class ActionSlider extends StatefulWidget {
                   iconAlignment,
                 ),
             height: height,
-            toggleWidth: circleRadius * 2,
-            toggleHeight: circleRadius * 2,
+            toggleWidth: height - borderWidth * 2,
+            toggleMargin: EdgeInsets.all(borderWidth),
             backgroundColor: backgroundColor,
             onSlide: onSlide,
             onTap: onTap,
@@ -233,6 +243,23 @@ class ActionSlider extends StatefulWidget {
             backgroundBorderRadius: backgroundBorderRadius,
             boxShadow: boxShadow,
             sliderBehavior: sliderBehavior);
+
+  static BackgroundBuilder _standardOuterBackgroundBuilder(
+    BorderRadius backgroundBorderRadius,
+    Color? backgroundColor,
+    List<BoxShadow> boxShadow,
+    double? width,
+  ) {
+    return (context, state, child) => Container(
+          clipBehavior: Clip.antiAlias,
+          width: width,
+          decoration: BoxDecoration(
+            color: backgroundColor ?? Theme.of(context).backgroundColor,
+            borderRadius: backgroundBorderRadius,
+            boxShadow: boxShadow,
+          ),
+        );
+  }
 
   static Widget _standardBackgroundBuilder(
       BuildContext context, ActionSliderState state, Widget? child) {
@@ -337,7 +364,7 @@ class _ActionSliderState extends State<ActionSlider>
 
   ActionSliderController get _controller =>
       widget.controller ?? _localController!;
-  SliderState state = SliderState(position: 0.0, state: SlidingState.released);
+  SliderState _state = SliderState(position: 0.0, state: SlidingState.released);
 
   @override
   void initState() {
@@ -357,10 +384,10 @@ class _ActionSliderState extends State<ActionSlider>
         reverseCurve: widget.reverseSlideAnimationCurve);
     _slideAnimation.addListener(() {
       //TODO: more efficiency
-      if (state.state != SlidingState.dragged) {
+      if (_state.state != SlidingState.dragged) {
         setState(() {
-          state = state.copyWith(
-              position: _slideAnimation.value * state.releasePosition);
+          _state = _state.copyWith(
+              position: _slideAnimation.value * _state.releasePosition);
         });
       }
     });
@@ -412,16 +439,29 @@ class _ActionSliderState extends State<ActionSlider>
       _loadingAnimationController.reverse();
       if (_controller.value.jumpPosition > 0.0) {
         _controller._setMode(SliderMode.standard, notify: false);
-        state = state.copyWith(releasePosition: 0.3);
+        _state = _state.copyWith(releasePosition: 0.3);
         _slideAnimationController.forward();
       } else {
-        setState(() => state =
-            state.copyWith(releasePosition: 1.0, state: SlidingState.released));
+        if (_slideAnimationController.isCompleted) {
+          setState(() {
+            _state = _state.copyWith(
+                position: 0.0,
+                releasePosition: 0.0,
+                state: SlidingState.released);
+          });
+        } else if (_slideAnimationController.status !=
+            AnimationStatus.reverse) {
+          _state = _state.copyWith(
+              position: _slideAnimationController.value,
+              releasePosition: _slideAnimationController.value,
+              state: SlidingState.released);
+          _slideAnimationController.reverse(from: 1.0);
+        }
       }
     } else {
       _loadingAnimationController.forward();
-      setState(() => state =
-          state.copyWith(releasePosition: 1.0, state: SlidingState.loading));
+      setState(() => _state =
+          _state.copyWith(releasePosition: 0.0, state: SlidingState.compact));
     }
   }
 
@@ -429,146 +469,155 @@ class _ActionSliderState extends State<ActionSlider>
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
 
-    double frame = (widget.height - widget.toggleHeight) / 2;
+    //double dframe = (widget.height - widget.toggleSize.height) / 2;
     //TODO: More efficiency by using separate widgets and child property of AnimatedBuilder
 
-    return LayoutBuilder(builder: (context, constraints) {
-      final maxWidth =
-          min(widget.width ?? double.infinity, constraints.maxWidth);
-      if (maxWidth == double.infinity) {
-        throw StateError('The constraints of the ActionSlider '
-            'are unbound and no width is set');
-      }
-      final standardWidth = maxWidth - widget.toggleWidth - frame * 2;
-      return AnimatedBuilder(
-        builder: (context, child) {
-          final width =
-              maxWidth - (_loadingAnimationController.value * standardWidth);
-          final backgroundWidth = width - widget.toggleWidth - frame * 2;
-          final position =
-              (state.position * backgroundWidth).clamp(0.0, backgroundWidth);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth =
+            min(widget.width ?? double.infinity, constraints.maxWidth);
+        if (maxWidth == double.infinity) {
+          throw StateError('The constraints of the ActionSlider '
+              'are unbound and no width is set');
+        }
+        final standardWidth =
+            maxWidth - widget.toggleWidth - widget.toggleMargin.horizontal;
+        return AnimatedBuilder(
+          builder: (context, child) {
+            final width =
+                maxWidth - (_loadingAnimationController.value * standardWidth);
+            final backgroundWidth =
+                width - widget.toggleWidth - widget.toggleMargin.horizontal;
+            final position =
+                (_state.position * backgroundWidth).clamp(0.0, backgroundWidth);
 
-          double togglePosition;
-          double toggleWidth;
+            double togglePosition;
+            double toggleWidth;
 
-          if (widget.sliderBehavior == SliderBehavior.move) {
-            togglePosition = position;
-            toggleWidth = widget.toggleWidth;
-          } else {
-            togglePosition = 0;
-            toggleWidth = position + widget.toggleWidth;
-          }
+            if (widget.sliderBehavior == SliderBehavior.move) {
+              togglePosition = position;
+              toggleWidth = widget.toggleWidth;
+            } else {
+              togglePosition = 0;
+              toggleWidth = position + widget.toggleWidth;
+            }
 
-          return GestureDetector(
-            onTap: () {
-              if (state.state != SlidingState.released) return;
-              widget.onTap?.call(_controller);
-            },
-            child: Container(
-              width: width,
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                color: widget.backgroundColor ?? theme.backgroundColor,
-                borderRadius: widget.backgroundBorderRadius,
-                boxShadow: widget.boxShadow,
-              ),
-              height: widget.height,
-              child: Center(
-                child: SizedBox(
-                  width: width - frame * 2,
-                  height: widget.toggleHeight,
-                  child: Stack(children: [
-                    Positioned.fill(
-                      child: Builder(
-                        builder: (context) => widget.backgroundBuilder(
-                          context,
-                          ActionSliderState(
-                            position: state.position,
-                            size: Size(width, widget.height),
-                            standardSize: Size(maxWidth, widget.height),
-                            slidingState: state.state,
-                            sliderMode: _controller.value,
-                            releasePosition: state.releasePosition,
-                            toggleSize: Size(toggleWidth, widget.toggleHeight),
-                          ),
-                          widget.backgroundChild,
-                        ),
-                      ),
+            final toggleHeight = widget.height - widget.toggleMargin.vertical;
+
+            final actionSliderState = ActionSliderState(
+              position: _state.position,
+              size: Size(width, widget.height),
+              standardSize: Size(maxWidth, widget.height),
+              slidingState: _state.state,
+              sliderMode: _controller.value,
+              releasePosition: _state.releasePosition,
+              toggleSize: Size(toggleWidth, toggleHeight),
+            );
+
+            return GestureDetector(
+              onTap: () {
+                if (_state.state != SlidingState.released) return;
+                widget.onTap?.call(_controller);
+              },
+              child: SizedBox.fromSize(
+                size: actionSliderState.size,
+                child: Stack(
+                  children: [
+                    (widget.outerBackgroundBuilder ??
+                        ActionSlider._standardOuterBackgroundBuilder(
+                            widget.backgroundBorderRadius,
+                            widget.backgroundColor,
+                            widget.boxShadow,
+                            widget.width))(
+                      context,
+                      actionSliderState,
+                      widget.outerBackgroundChild,
                     ),
-                    Positioned(
-                      left: togglePosition,
-                      width: toggleWidth,
-                      height: widget.toggleHeight,
-                      child: GestureDetector(
-                        onHorizontalDragStart: (details) {
-                          setState(() {
-                            state = SliderState(
-                              position: ((details.localPosition.dx -
-                                          widget.toggleWidth / 2) /
-                                      backgroundWidth)
-                                  .clamp(0.0, 1.0),
-                              state: SlidingState.dragged,
-                            );
-                          });
-                        },
-                        onHorizontalDragUpdate: (details) {
-                          if (state.state == SlidingState.dragged) {
-                            double newPosition = ((details.localPosition.dx -
-                                        widget.toggleWidth / 2) /
-                                    backgroundWidth)
-                                .clamp(0.0, 1.0);
-                            setState(() {
-                              state = SliderState(
-                                position: newPosition,
-                                state: newPosition < 1.0
-                                    ? SlidingState.dragged
-                                    : SlidingState.released,
-                              );
-                            });
-                            if (state.state == SlidingState.released)
-                              _onSlide();
-                          }
-                        },
-                        onHorizontalDragEnd: (details) => setState(() {
-                          state = state.copyWith(
-                              state: SlidingState.released,
-                              releasePosition: state.position);
-                          _slideAnimationController.reverse(from: 1.0);
-                        }),
-                        child: MouseRegion(
-                          cursor: state.state == SlidingState.loading
-                              ? MouseCursor.defer
-                              : (state.state == SlidingState.released
-                                  ? SystemMouseCursors.grab
-                                  : SystemMouseCursors.grabbing),
-                          child: Builder(
-                            builder: (context) => widget.foregroundBuilder(
-                              context,
-                              ActionSliderState(
-                                position: state.position,
-                                size: Size(width, widget.height),
-                                standardSize: Size(maxWidth, widget.height),
-                                slidingState: state.state,
-                                sliderMode: _controller.value,
-                                releasePosition: state.releasePosition,
-                                toggleSize:
-                                    Size(toggleWidth, widget.toggleHeight),
+                    Padding(
+                      padding: widget.toggleMargin,
+                      child: Stack(children: [
+                        if (widget.backgroundBuilder != null)
+                          Positioned.fill(
+                            child: Builder(
+                              builder: (context) => widget.backgroundBuilder!(
+                                context,
+                                actionSliderState,
+                                widget.backgroundChild,
                               ),
-                              widget.foregroundChild,
+                            ),
+                          ),
+                        Positioned(
+                          left: togglePosition,
+                          width: toggleWidth,
+                          height: toggleHeight,
+                          child: GestureDetector(
+                            onHorizontalDragStart: (details) {
+                              if (_state.state != SlidingState.released ||
+                                  !_controller.value.expanded) return;
+                              setState(() {
+                                _state = SliderState(
+                                  position: ((details.localPosition.dx -
+                                              widget.toggleWidth / 2) /
+                                          backgroundWidth)
+                                      .clamp(0.0, 1.0),
+                                  state: SlidingState.dragged,
+                                );
+                              });
+                            },
+                            onHorizontalDragUpdate: (details) {
+                              if (_state.state == SlidingState.dragged) {
+                                double newPosition =
+                                    ((details.localPosition.dx -
+                                                widget.toggleWidth / 2) /
+                                            backgroundWidth)
+                                        .clamp(0.0, 1.0);
+                                setState(() {
+                                  _state = SliderState(
+                                    position: newPosition,
+                                    state: newPosition < 1.0
+                                        ? SlidingState.dragged
+                                        : SlidingState.released,
+                                  );
+                                });
+                                if (_state.state == SlidingState.released) {
+                                  _onSlide();
+                                }
+                              }
+                            },
+                            onHorizontalDragEnd: (details) => setState(() {
+                              if (_state.state != SlidingState.dragged) return;
+                              _state = _state.copyWith(
+                                  state: SlidingState.released,
+                                  releasePosition: _state.position);
+                              _slideAnimationController.reverse(from: 1.0);
+                            }),
+                            child: MouseRegion(
+                              cursor: _state.state == SlidingState.compact
+                                  ? MouseCursor.defer
+                                  : (_state.state == SlidingState.released
+                                      ? SystemMouseCursors.grab
+                                      : SystemMouseCursors.grabbing),
+                              child: Builder(
+                                builder: (context) => widget.foregroundBuilder(
+                                  context,
+                                  actionSliderState,
+                                  widget.foregroundChild,
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                      ]),
                     ),
-                  ]),
+                  ],
                 ),
               ),
-            ),
-          );
-        },
-        animation: _loadingAnimation,
-      );
-    });
+            );
+          },
+          animation: _loadingAnimation,
+        );
+      },
+    );
   }
 
   void _onSlide() {

@@ -126,7 +126,7 @@ class _MyHomePageState extends State<MyHomePage> {
               controller: _controller,
               height: 60.0,
               toggleWidth: 60.0,
-              toggleHeight: 60.0,
+              toggleMargin: const EdgeInsets.all(12.0),
               backgroundColor: Colors.green,
               foregroundChild: DecoratedBox(
                   decoration: BoxDecoration(
@@ -134,7 +134,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       borderRadius: BorderRadius.circular(5)),
                   child: const Icon(Icons.check_rounded, color: Colors.white)),
               foregroundBuilder: (context, state, child) => child!,
-              backgroundBuilder: (context, state, child) => Container(
+              outerBackgroundBuilder: (context, state, child) => Card(
                 color: Color.lerp(Colors.red, Colors.green, state.position),
                 child: Center(
                     child: Text(state.position.toStringAsFixed(2),
