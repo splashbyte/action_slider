@@ -46,6 +46,7 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             ActionSlider.standard(
               width: 300.0,
+              actionThresholdType: ThresholdType.release,
               child: const Text('Slide to confirm'),
               onSlide: (controller) async {
                 controller.loading(); //starts loading animation
@@ -141,12 +142,12 @@ class _MyHomePageState extends State<MyHomePage> {
                         style: theme.textTheme.subtitle1)),
               ),
               backgroundBorderRadius: BorderRadius.circular(5.0),
-              onSlide: (controller) async {
+              action: (controller) async {
                 controller.loading(); //starts loading animation
                 await Future.delayed(const Duration(seconds: 3));
                 controller.success(); //starts success animation
                 await Future.delayed(const Duration(seconds: 1));
-                controller.reset(); //resets the slidere slider
+                controller.reset(); //resets the slider
               },
             ),
             const SizedBox(height: 24.0),
@@ -174,12 +175,12 @@ class _MyHomePageState extends State<MyHomePage> {
                       minHeight: state.toggleSize.height,
                       child: child!)),
               backgroundBorderRadius: BorderRadius.circular(5.0),
-              onSlide: (controller) async {
+              action: (controller) async {
                 controller.loading(); //starts loading animation
                 await Future.delayed(const Duration(seconds: 3));
                 controller.success(); //starts success animation
                 await Future.delayed(const Duration(seconds: 1));
-                controller.reset(); //resets the slideretting the slider
+                controller.reset(); //resets the slider
               },
             )
           ],

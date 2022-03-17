@@ -9,11 +9,23 @@ import 'package:flutter/material.dart';
 
 enum SliderBehavior { move, stretch }
 
+enum ThresholdType {
+  ///The action should be triggered as soon as the threshold is reached.
+  ///The slider does not have to be released for this.
+  instant,
+
+  ///The action should only be triggered when the threshold is reached
+  ///and the slider is released.
+  release,
+}
+
 typedef BackgroundBuilder = Widget Function(
     BuildContext, ActionSliderState, Widget?);
 typedef ForegroundBuilder = Widget Function(
     BuildContext, ActionSliderState, Widget?);
-typedef SlideCallback = Function(ActionSliderController controller);
+typedef Action = Function(ActionSliderController controller);
+typedef StateChangeCallback = Function(ActionSliderState? oldState,
+    ActionSliderState state, ActionSliderController controller);
 typedef TapCallback = Function(ActionSliderController controller);
 
 class ActionSliderController extends ChangeNotifier
@@ -113,7 +125,11 @@ class ActionSlider extends StatefulWidget {
   ///Here you should call the loading, success and failure methods of the
   ///[controller] for controlling the further behaviour/animations of the
   ///slider.
-  final SlideCallback? onSlide;
+  final Action? action;
+
+  ///Callback when the [ActionSliderState] changes.
+  ///With this you can define more individual behavior than with [action], if it is necessary.
+  final StateChangeCallback? stateChangeCallback;
 
   ///Callback for tapping on the [ActionSlider]. Defaults to (c) => c.jump().
   ///Is only called if the toggle is currently not dragged.
@@ -126,6 +142,12 @@ class ActionSlider extends StatefulWidget {
 
   ///This [SliderBehavior] defines the behaviour when moving the toggle.
   final SliderBehavior? sliderBehavior;
+
+  ///The threshold at which the action should be triggered. Should be between 0.0 and 1.0.
+  final double actionThreshold;
+
+  ///The [ThresholdType] of the [actionThreshold].
+  final ThresholdType actionThresholdType;
 
   ///Constructor with very high customizability
   const ActionSlider.custom({
@@ -143,7 +165,7 @@ class ActionSlider extends StatefulWidget {
     this.foregroundChild,
     this.backgroundBorderRadius =
         const BorderRadius.all(Radius.circular(100.0)),
-    this.onSlide,
+    this.action,
     this.controller,
     this.loadingAnimationDuration = const Duration(milliseconds: 350),
     this.width,
@@ -161,6 +183,9 @@ class ActionSlider extends StatefulWidget {
     ],
     this.sliderBehavior = SliderBehavior.move,
     this.onTap = _defaultOnTap,
+    this.actionThreshold = 1.0,
+    this.actionThresholdType = ThresholdType.instant,
+    this.stateChangeCallback,
   }) : super(key: key);
 
   static _defaultOnTap(ActionSliderController c) => c.jump();
@@ -194,7 +219,7 @@ class ActionSlider extends StatefulWidget {
     double height = 65.0,
     double borderWidth = 5.0,
     bool rolling = false,
-    SlideCallback? onSlide,
+    Action? onSlide,
     TapCallback? onTap = _defaultOnTap,
     ActionSliderController? controller,
     double? width,
@@ -218,47 +243,54 @@ class ActionSlider extends StatefulWidget {
       )
     ],
     SliderBehavior sliderBehavior = SliderBehavior.move,
+    double actionThreshold = 1.0,
+    ThresholdType actionThresholdType = ThresholdType.instant,
+    StateChangeCallback? stateChangeCallback,
   }) : this.custom(
-            key: key,
-            backgroundChild: customBackgroundBuilderChild,
-            backgroundBuilder: customBackgroundBuilder ??
-                (context, state, _) =>
-                    _standardBackgroundBuilder(context, state, child),
-            foregroundBuilder: (context, state, child) =>
-                _standardForegroundBuilder(
-                  context,
-                  state,
-                  rolling,
-                  icon,
-                  loadingIcon,
-                  successIcon,
-                  failureIcon,
-                  toggleColor,
-                  customForegroundBuilder,
-                  customForegroundBuilderChild,
-                  foregroundBorderRadius,
-                  iconAlignment,
-                  crossFadeDuration,
-                ),
-            outerBackgroundBuilder: customOuterBackgroundBuilder,
-            outerBackgroundChild: customOuterBackgroundBuilderChild,
-            height: height,
-            toggleWidth: height - borderWidth * 2,
-            toggleMargin: EdgeInsets.all(borderWidth),
-            backgroundColor: backgroundColor,
-            onSlide: onSlide,
-            onTap: onTap,
-            controller: controller,
-            width: width,
-            slideAnimationDuration: slideAnimationDuration,
-            reverseSlideAnimationDuration: reverseSlideAnimationDuration,
-            loadingAnimationDuration: loadingAnimationDuration,
-            slideAnimationCurve: slideAnimationCurve,
-            reverseSlideAnimationCurve: reverseSlideAnimationCurve,
-            loadingAnimationCurve: loadingAnimationCurve,
-            backgroundBorderRadius: backgroundBorderRadius,
-            boxShadow: boxShadow,
-            sliderBehavior: sliderBehavior);
+          key: key,
+          backgroundChild: customBackgroundBuilderChild,
+          backgroundBuilder: customBackgroundBuilder ??
+              (context, state, _) =>
+                  _standardBackgroundBuilder(context, state, child),
+          foregroundBuilder: (context, state, child) =>
+              _standardForegroundBuilder(
+            context,
+            state,
+            rolling,
+            icon,
+            loadingIcon,
+            successIcon,
+            failureIcon,
+            toggleColor,
+            customForegroundBuilder,
+            customForegroundBuilderChild,
+            foregroundBorderRadius,
+            iconAlignment,
+            crossFadeDuration,
+          ),
+          outerBackgroundBuilder: customOuterBackgroundBuilder,
+          outerBackgroundChild: customOuterBackgroundBuilderChild,
+          height: height,
+          toggleWidth: height - borderWidth * 2,
+          toggleMargin: EdgeInsets.all(borderWidth),
+          backgroundColor: backgroundColor,
+          action: onSlide,
+          onTap: onTap,
+          controller: controller,
+          width: width,
+          slideAnimationDuration: slideAnimationDuration,
+          reverseSlideAnimationDuration: reverseSlideAnimationDuration,
+          loadingAnimationDuration: loadingAnimationDuration,
+          slideAnimationCurve: slideAnimationCurve,
+          reverseSlideAnimationCurve: reverseSlideAnimationCurve,
+          loadingAnimationCurve: loadingAnimationCurve,
+          backgroundBorderRadius: backgroundBorderRadius,
+          boxShadow: boxShadow,
+          sliderBehavior: sliderBehavior,
+          actionThreshold: actionThreshold,
+          actionThresholdType: actionThresholdType,
+          stateChangeCallback: stateChangeCallback,
+        );
 
   static BackgroundBuilder _standardOuterBackgroundBuilder(
     BorderRadius backgroundBorderRadius,
@@ -378,6 +410,7 @@ class _ActionSliderState extends State<ActionSlider>
   late final CurvedAnimation _slideAnimation;
   late final CurvedAnimation _loadingAnimation;
   ActionSliderController? _localController;
+  ActionSliderState? _lastActionSliderState;
 
   ActionSliderController get _controller =>
       widget.controller ?? _localController!;
@@ -402,10 +435,10 @@ class _ActionSliderState extends State<ActionSlider>
     _slideAnimation.addListener(() {
       //TODO: more efficiency
       if (_state.state != SlidingState.dragged) {
-        setState(() {
-          _state = _state.copyWith(
-              position: _slideAnimation.value * _state.releasePosition);
-        });
+        _changeState(
+            _state.copyWith(
+                position: _slideAnimation.value * _state.releasePosition),
+            null);
       }
     });
     _slideAnimation.addStatusListener((status) {
@@ -439,6 +472,7 @@ class _ActionSliderState extends State<ActionSlider>
       } else {
         _localController = null;
       }
+      _controller.removeListener(_onModeChange);
       _controller.addListener(_onModeChange);
     }
     _slideAnimationController.duration = widget.slideAnimationDuration;
@@ -452,41 +486,70 @@ class _ActionSliderState extends State<ActionSlider>
 
   void _onModeChange() {
     if (_controller.value.expanded) {
-      _slideAnimationController.reverse();
-      _loadingAnimationController.reverse();
       if (_controller.value.jumpPosition > 0.0) {
-        _controller._setMode(SliderMode.standard, notify: false);
-        _state = _state.copyWith(releasePosition: 0.3);
+        _changeState(
+            _state.copyWith(releasePosition: _controller.value.jumpPosition),
+            null,
+            setState: false);
         _slideAnimationController.forward();
+        _controller._setMode(SliderMode.standard, notify: false);
       } else {
-        if (_slideAnimationController.isCompleted) {
-          setState(() {
-            _state = _state.copyWith(
-                position: 0.0,
-                releasePosition: 0.0,
-                state: SlidingState.released);
-          });
-        } else if (_slideAnimationController.status !=
-            AnimationStatus.reverse) {
-          _state = _state.copyWith(
-              position: _slideAnimationController.value,
-              releasePosition: _slideAnimationController.value,
-              state: SlidingState.released);
+        if (_loadingAnimationController.isCompleted) {
+          _changeState(
+              _state.copyWith(
+                  position: 0.0,
+                  releasePosition: 0.0,
+                  state: SlidingState.released),
+              null);
+        } else {
+          _changeState(
+              _state.copyWith(
+                  position: _slideAnimationController.value,
+                  releasePosition: _slideAnimationController.value,
+                  state: SlidingState.released),
+              null,
+              setState: false);
           _slideAnimationController.reverse(from: 1.0);
         }
+        _loadingAnimationController.reverse();
       }
     } else {
       _loadingAnimationController.forward();
-      setState(() => _state =
-          _state.copyWith(releasePosition: 0.0, state: SlidingState.compact));
+      _slideAnimationController.stop();
+      _changeState(
+          _state = _state.copyWith(
+              releasePosition: 0.0, state: SlidingState.compact),
+          null);
+    }
+  }
+
+  void _changeState(SliderState state, ActionSliderState? oldActionSliderState,
+      {bool setState = true}) {
+    if (_state != state) {
+      _state = state;
+      if (setState) this.setState(() {});
+    }
+    if (widget.stateChangeCallback == null) return;
+    oldActionSliderState ??= _lastActionSliderState;
+    if (oldActionSliderState == null) return;
+    final actionSliderState = ActionSliderState(
+      position: _state.position,
+      size: oldActionSliderState.size,
+      standardSize: oldActionSliderState.standardSize,
+      slidingState: _state.state,
+      sliderMode: _controller.value,
+      releasePosition: _state.releasePosition,
+      toggleSize: oldActionSliderState.toggleSize,
+    );
+    if (_lastActionSliderState != actionSliderState) {
+      widget.stateChangeCallback!
+          .call(_lastActionSliderState, actionSliderState, _controller);
+      _lastActionSliderState = actionSliderState;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    var theme = Theme.of(context);
-
-    //double dframe = (widget.height - widget.toggleSize.height) / 2;
     //TODO: More efficiency by using separate widgets and child property of AnimatedBuilder
 
     return LayoutBuilder(
@@ -531,6 +594,8 @@ class _ActionSliderState extends State<ActionSlider>
               toggleSize: Size(toggleWidth, toggleHeight),
             );
 
+            _changeState(_state, actionSliderState, setState: false);
+
             return GestureDetector(
               onTap: () {
                 if (_state.state != SlidingState.released) return;
@@ -571,15 +636,15 @@ class _ActionSliderState extends State<ActionSlider>
                             onHorizontalDragStart: (details) {
                               if (_state.state != SlidingState.released ||
                                   !_controller.value.expanded) return;
-                              setState(() {
-                                _state = SliderState(
-                                  position: ((details.localPosition.dx -
-                                              widget.toggleWidth / 2) /
-                                          backgroundWidth)
-                                      .clamp(0.0, 1.0),
-                                  state: SlidingState.dragged,
-                                );
-                              });
+                              _changeState(
+                                  SliderState(
+                                    position: ((details.localPosition.dx -
+                                                widget.toggleWidth / 2) /
+                                            backgroundWidth)
+                                        .clamp(0.0, 1.0),
+                                    state: SlidingState.dragged,
+                                  ),
+                                  actionSliderState);
                             },
                             onHorizontalDragUpdate: (details) {
                               if (_state.state == SlidingState.dragged) {
@@ -588,25 +653,41 @@ class _ActionSliderState extends State<ActionSlider>
                                                 widget.toggleWidth / 2) /
                                             backgroundWidth)
                                         .clamp(0.0, 1.0);
-                                setState(() {
-                                  _state = SliderState(
-                                    position: newPosition,
-                                    state: newPosition < 1.0
-                                        ? SlidingState.dragged
-                                        : SlidingState.released,
-                                  );
-                                });
+                                _changeState(
+                                    widget.actionThresholdType ==
+                                                ThresholdType.release ||
+                                            newPosition < widget.actionThreshold
+                                        ? SliderState(
+                                            position: newPosition,
+                                            state: SlidingState.dragged,
+                                          )
+                                        : SliderState(
+                                            position: newPosition,
+                                            state: SlidingState.released,
+                                            releasePosition: newPosition,
+                                          ),
+                                    actionSliderState);
                                 if (_state.state == SlidingState.released) {
+                                  _slideAnimationController.reverse(from: 1.0);
                                   _onSlide();
                                 }
                               }
                             },
                             onHorizontalDragEnd: (details) => setState(() {
                               if (_state.state != SlidingState.dragged) return;
-                              _state = _state.copyWith(
-                                  state: SlidingState.released,
-                                  releasePosition: _state.position);
+                              _changeState(
+                                _state.copyWith(
+                                    state: SlidingState.released,
+                                    releasePosition: _state.position),
+                                actionSliderState,
+                                setState: false,
+                              );
                               _slideAnimationController.reverse(from: 1.0);
+                              if (widget.actionThresholdType ==
+                                      ThresholdType.release &&
+                                  _state.position >= widget.actionThreshold) {
+                                _onSlide();
+                              }
                             }),
                             child: MouseRegion(
                               cursor: _state.state == SlidingState.compact
@@ -638,6 +719,6 @@ class _ActionSliderState extends State<ActionSlider>
   }
 
   void _onSlide() {
-    widget.onSlide?.call(_controller);
+    widget.action?.call(_controller);
   }
 }

@@ -19,6 +19,19 @@ class SliderState {
         state: state ?? this.state,
         releasePosition: releasePosition ?? this.releasePosition,
       );
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SliderState &&
+          runtimeType == other.runtimeType &&
+          position == other.position &&
+          releasePosition == other.releasePosition &&
+          state == other.state;
+
+  @override
+  int get hashCode =>
+      position.hashCode ^ releasePosition.hashCode ^ state.hashCode;
 }
 
 class BaseActionSliderState {
@@ -69,4 +82,27 @@ class ActionSliderState extends BaseActionSliderState {
           sliderMode: sliderMode,
           releasePosition: releasePosition,
         );
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ActionSliderState &&
+          runtimeType == other.runtimeType &&
+          size == other.size &&
+          standardSize == other.standardSize &&
+          toggleSize == other.toggleSize &&
+          position == other.position &&
+          slidingState == other.slidingState &&
+          sliderMode == other.sliderMode &&
+          releasePosition == other.releasePosition;
+
+  @override
+  int get hashCode =>
+      size.hashCode ^
+      standardSize.hashCode ^
+      toggleSize.hashCode ^
+      position.hashCode ^
+      slidingState.hashCode ^
+      sliderMode.hashCode ^
+      releasePosition.hashCode;
 }

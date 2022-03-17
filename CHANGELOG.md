@@ -1,3 +1,8 @@
+## 0.5.0 [2022-03-17]
+- adds `stateChangeCallback`, `actionThreshold` and `actionThresholdType`
+- BREAKING: renames `onSlide` to `action`
+- BREAKING: renames `SlideCallback` to `Action`
+
 ## 0.4.0 [2022-03-17]
 - major customizability improvements
 - adds `outerBackgroundBuilder` and `outerBackgroundChild` to constructor `ActionSlider.custom`
