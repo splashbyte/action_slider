@@ -1,4 +1,4 @@
-## 0.6.0 [2022-03-22]
+## 0.6.0 [2022-07-05]
 - minor fixes
 - fixes #1
 - BREAKING: renames `onSlide` to `action` in `ActionSlider.standard`
