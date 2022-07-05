@@ -219,7 +219,7 @@ class ActionSlider extends StatefulWidget {
     double height = 65.0,
     double borderWidth = 5.0,
     bool rolling = false,
-    Action? onSlide,
+    Action? action,
     TapCallback? onTap = _defaultOnTap,
     ActionSliderController? controller,
     double? width,
@@ -274,7 +274,7 @@ class ActionSlider extends StatefulWidget {
           toggleWidth: height - borderWidth * 2,
           toggleMargin: EdgeInsets.all(borderWidth),
           backgroundColor: backgroundColor,
-          action: onSlide,
+          action: action,
           onTap: onTap,
           controller: controller,
           width: width,
@@ -457,6 +457,7 @@ class _ActionSliderState extends State<ActionSlider>
   void dispose() {
     _slideAnimationController.dispose();
     _loadingAnimationController.dispose();
+    _controller.removeListener(_onModeChange);
     _localController?.dispose();
     super.dispose();
   }
@@ -487,11 +488,13 @@ class _ActionSliderState extends State<ActionSlider>
   void _onModeChange() {
     if (_controller.value.expanded) {
       if (_controller.value.jumpPosition > 0.0) {
-        _changeState(
-            _state.copyWith(releasePosition: _controller.value.jumpPosition),
-            null,
-            setState: false);
-        _slideAnimationController.forward();
+        if (_state.state == SlidingState.released) {
+          _changeState(
+              _state.copyWith(releasePosition: _controller.value.jumpPosition),
+              null,
+              setState: false);
+          _slideAnimationController.forward();
+        }
         _controller._setMode(SliderMode.standard, notify: false);
       } else {
         if (_loadingAnimationController.isCompleted) {
@@ -525,10 +528,8 @@ class _ActionSliderState extends State<ActionSlider>
 
   void _changeState(SliderState state, ActionSliderState? oldActionSliderState,
       {bool setState = true}) {
-    if (_state != state) {
-      _state = state;
-      if (setState) this.setState(() {});
-    }
+    _state = state;
+    if (setState) this.setState(() {});
     if (widget.stateChangeCallback == null) return;
     oldActionSliderState ??= _lastActionSliderState;
     if (oldActionSliderState == null) return;

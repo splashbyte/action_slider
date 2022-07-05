@@ -48,7 +48,7 @@ class _MyHomePageState extends State<MyHomePage> {
               width: 300.0,
               actionThresholdType: ThresholdType.release,
               child: const Text('Slide to confirm'),
-              onSlide: (controller) async {
+              action: (controller) async {
                 controller.loading(); //starts loading animation
                 await Future.delayed(const Duration(seconds: 3));
                 controller.success(); //starts success animation
@@ -63,7 +63,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: const Text('Slide to confirm'),
               backgroundColor: Colors.white,
               toggleColor: Colors.lightGreenAccent,
-              onSlide: (controller) async {
+              action: (controller) async {
                 controller.loading(); //starts loading animation
                 await Future.delayed(const Duration(seconds: 3));
                 controller.success(); //starts success animation
@@ -82,7 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
               reverseSlideAnimationDuration: const Duration(milliseconds: 500),
               toggleColor: Colors.purpleAccent,
               icon: const Icon(Icons.add),
-              onSlide: (controller) async {
+              action: (controller) async {
                 controller.loading(); //starts loading animation
                 await Future.delayed(const Duration(seconds: 3));
                 controller.success(); //starts success animation
@@ -100,7 +100,7 @@ class _MyHomePageState extends State<MyHomePage> {
               toggleColor: Colors.amber,
               iconAlignment: Alignment.centerRight,
               loadingIcon: SizedBox(
-                  width: 50,
+                  width: 55,
                   child: Center(
                       child: SizedBox(
                     width: 24.0,
@@ -109,10 +109,10 @@ class _MyHomePageState extends State<MyHomePage> {
                         strokeWidth: 2.0, color: theme.iconTheme.color),
                   ))),
               successIcon: const SizedBox(
-                  width: 50, child: Center(child: Icon(Icons.check_rounded))),
+                  width: 55, child: Center(child: Icon(Icons.check_rounded))),
               icon: const SizedBox(
-                  width: 50, child: Center(child: Icon(Icons.refresh_rounded))),
-              onSlide: (controller) async {
+                  width: 55, child: Center(child: Icon(Icons.refresh_rounded))),
+              action: (controller) async {
                 controller.loading(); //starts loading animation
                 await Future.delayed(const Duration(seconds: 3));
                 controller.success(); //starts success animation
@@ -127,7 +127,7 @@ class _MyHomePageState extends State<MyHomePage> {
               controller: _controller,
               height: 60.0,
               toggleWidth: 60.0,
-              toggleMargin: const EdgeInsets.all(12.0),
+              toggleMargin: EdgeInsets.zero,
               backgroundColor: Colors.green,
               foregroundChild: DecoratedBox(
                   decoration: BoxDecoration(
@@ -136,6 +136,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: const Icon(Icons.check_rounded, color: Colors.white)),
               foregroundBuilder: (context, state, child) => child!,
               outerBackgroundBuilder: (context, state, child) => Card(
+                margin: EdgeInsets.zero,
                 color: Color.lerp(Colors.red, Colors.green, state.position),
                 child: Center(
                     child: Text(state.position.toStringAsFixed(2),
@@ -152,14 +153,16 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             const SizedBox(height: 24.0),
             ActionSlider.custom(
+              toggleMargin: EdgeInsets.zero,
               width: 300.0,
               controller: _controller,
+              toggleWidth: 60.0,
               height: 60.0,
               backgroundColor: Colors.green,
               foregroundChild: Container(
                   decoration: const BoxDecoration(
                     color: Colors.black,
-                    borderRadius: BorderRadius.all(Radius.circular(27.5)),
+                    borderRadius: BorderRadius.all(Radius.circular(30.0)),
                   ),
                   child: const Icon(Icons.check_rounded, color: Colors.white)),
               foregroundBuilder: (context, state, child) => child!,
@@ -182,7 +185,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 await Future.delayed(const Duration(seconds: 1));
                 controller.reset(); //resets the slider
               },
-            )
+            ),
           ],
         ),
       ),

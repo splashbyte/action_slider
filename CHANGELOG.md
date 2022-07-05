@@ -1,3 +1,8 @@
+## 0.6.0 [2022-03-22]
+- minor fixes
+- fixes #1
+- BREAKING: renames `onSlide` to `action` in `ActionSlider.standard`
+
 ## 0.5.0 [2022-03-17]
 - adds `stateChangeCallback`, `actionThreshold` and `actionThresholdType`
 - BREAKING: renames `onSlide` to `action`
