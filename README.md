@@ -22,7 +22,7 @@ Easy to use and highly customizable.
 ```dart
 ActionSlider.standard(
     child: const Text('Slide to confirm'),
-    onSlide: (controller) async {
+    action: (controller) async {
         controller.loading(); //starts loading animation
         await Future.delayed(const Duration(seconds: 3));
         controller.success(); //starts success animation
@@ -37,7 +37,7 @@ ActionSlider.custom(
     foregroundBuilder: (context, state, child) => ...,
     backgroundBuilder: (context, state, child) => ...,
     outerBackgroundBuilder: (context, state, child) => ...,
-    onSlide: (controller) => ...,
+    action: (controller) => ...,
     ... //many more parameters
 )
 ```
