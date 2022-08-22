@@ -1,9 +1,9 @@
-<a href="https://pub.dev/packages/action_slider"><img src="https://img.shields.io/pub/v/action_slider.svg?style=flat?logo=dart" alt="pub.dev"></a>
-<a href="https://github.com/SplashByte/action_slider"><img src="https://img.shields.io/static/v1?label=platform&message=flutter&color=1ebbfd" alt="github"></a>
-[![likes](https://badges.bar/action_slider/likes)](https://pub.dev/packages/action_slider/score)
-[![popularity](https://badges.bar/action_slider/popularity)](https://pub.dev/packages/action_slider/score)
-[![pub points](https://badges.bar/action_slider/pub%20points)](https://pub.dev/packages/action_slider/score)
-<a href="https://github.com/SplashByte/action_slider/blob/main/LICENSE"><img src="https://img.shields.io/github/license/SplashByte/action_slider.svg" alt="license"></a>
+[![pub.dev](https://img.shields.io/pub/v/action_slider.svg?style=flat?logo=dart)](https://pub.dev/packages/action_slider)
+[![github](https://img.shields.io/static/v1?label=platform&message=flutter&color=1ebbfd)](https://github.com/SplashByte/action_slider)
+[![likes](https://img.shields.io/pub/likes/action_slider)](https://pub.dev/packages/action_slider/score)
+[![popularity](https://img.shields.io/pub/popularity/action_slider)](https://pub.dev/packages/action_slider/score)
+[![pub points](https://img.shields.io/pub/points/action_slider)](https://pub.dev/packages/action_slider/score)
+[![license](https://img.shields.io/github/license/SplashByte/action_slider.svg)](https://github.com/SplashByte/action_slider/blob/main/LICENSE)
 
 [![buy me a coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/splashbyte)
 
