@@ -10,11 +10,11 @@
 ### If you like this package, please leave a like there on [pub.dev](https://pub.dev/packages/action_slider) and star on [GitHub](https://github.com/SplashByte/action_slider).
 
 A slider to confirm actions and provide feedback on the success of these after subsequent loading.  
+`LTR` and `RTL` are both supported.  
 For a switch with a similar look, you can check out [animated_toggle_switch](https://pub.dev/packages/animated_toggle_switch).
 
 ## Examples
-![action_slider_example](https://user-images.githubusercontent.com/43761463/156018021-0b938616-9b56-45bd-9dc2-676c283966a9.gif)
-
+![action_slider_example](https://user-images.githubusercontent.com/43761463/156018021-0b938616-9b56-45bd-9dc2-676c283966a9.gif)  
 ![action_slider_rtl_example](https://user-images.githubusercontent.com/43761463/206598104-dc0de437-3280-4901-8647-96397c792423.gif)
 
 
