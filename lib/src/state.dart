@@ -50,12 +50,35 @@ class BaseActionSliderState {
   /// The default value is 0.0.
   final double releasePosition;
 
+  /// The direction of the slider.
+  final TextDirection direction;
+
   BaseActionSliderState({
     required this.position,
     required this.slidingState,
     required this.sliderMode,
     required this.releasePosition,
+    required this.direction,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BaseActionSliderState &&
+          runtimeType == other.runtimeType &&
+          position == other.position &&
+          slidingState == other.slidingState &&
+          sliderMode == other.sliderMode &&
+          releasePosition == other.releasePosition &&
+          direction == other.direction;
+
+  @override
+  int get hashCode =>
+      position.hashCode ^
+      slidingState.hashCode ^
+      sliderMode.hashCode ^
+      releasePosition.hashCode ^
+      direction.hashCode;
 }
 
 class ActionSliderState extends BaseActionSliderState {
@@ -73,14 +96,16 @@ class ActionSliderState extends BaseActionSliderState {
     required SlidingState slidingState,
     required SliderMode sliderMode,
     required double releasePosition,
+    required TextDirection direction,
     required this.size,
     required this.standardSize,
     required this.toggleSize,
   }) : super(
-          position: position,
+    position: position,
           slidingState: slidingState,
           sliderMode: sliderMode,
           releasePosition: releasePosition,
+          direction: direction,
         );
 
   @override
@@ -94,7 +119,8 @@ class ActionSliderState extends BaseActionSliderState {
           position == other.position &&
           slidingState == other.slidingState &&
           sliderMode == other.sliderMode &&
-          releasePosition == other.releasePosition;
+          releasePosition == other.releasePosition &&
+          direction == other.direction;
 
   @override
   int get hashCode =>
@@ -104,5 +130,6 @@ class ActionSliderState extends BaseActionSliderState {
       position.hashCode ^
       slidingState.hashCode ^
       sliderMode.hashCode ^
-      releasePosition.hashCode;
+      releasePosition.hashCode ^
+      direction.hashCode;
 }

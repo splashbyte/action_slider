@@ -5,7 +5,8 @@ class SliderMode {
   ///Specifies the slider to be expanded in this mode. Otherwise it is compact.
   final bool expanded;
 
-  ///Indicates whether this mode is not native provided by this package.
+  //TODO: remove 'custom' because of redundancy (use getter instead)
+  ///Indicates whether this mode is not natively provided by this package.
   final bool custom;
 
   ///Indicates whether this mode is a result like [success] and [failure].

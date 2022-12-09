@@ -149,6 +149,11 @@ class ActionSlider extends StatefulWidget {
   ///The [ThresholdType] of the [actionThreshold].
   final ThresholdType actionThresholdType;
 
+  ///The direction of the slider.
+  ///
+  /// If set to [null], the [TextDirection] is fetched from the [BuildContext].
+  final TextDirection? direction;
+
   ///Constructor with very high customizability
   const ActionSlider.custom({
     Key? key,
@@ -186,6 +191,7 @@ class ActionSlider extends StatefulWidget {
     this.actionThreshold = 1.0,
     this.actionThresholdType = ThresholdType.instant,
     this.stateChangeCallback,
+    this.direction = TextDirection.ltr,
   }) : super(key: key);
 
   static _defaultOnTap(ActionSliderController c) => c.jump();
@@ -207,7 +213,7 @@ class ActionSlider extends StatefulWidget {
     Widget? loadingIcon,
     Widget successIcon = const Icon(Icons.check_rounded),
     Widget failureIcon = const Icon(Icons.close_rounded),
-    Widget icon = const Icon(Icons.keyboard_arrow_right_rounded),
+    Widget? icon,
     ForegroundBuilder? customForegroundBuilder,
     Widget? customForegroundBuilderChild,
     BackgroundBuilder? customBackgroundBuilder,
@@ -215,26 +221,26 @@ class ActionSlider extends StatefulWidget {
     BackgroundBuilder? customOuterBackgroundBuilder,
     Widget? customOuterBackgroundBuilderChild,
     Color? toggleColor,
-    Color? backgroundColor,
-    double height = 65.0,
+    this.backgroundColor,
+    this.height = 65.0,
     double borderWidth = 5.0,
     bool rolling = false,
-    Action? action,
-    TapCallback? onTap = _defaultOnTap,
-    ActionSliderController? controller,
-    double? width,
-    Duration slideAnimationDuration = const Duration(milliseconds: 250),
-    Duration reverseSlideAnimationDuration = const Duration(milliseconds: 1000),
-    Duration loadingAnimationDuration = const Duration(milliseconds: 350),
+    this.action,
+    this.onTap = _defaultOnTap,
+    this.controller,
+    this.width,
+    this.slideAnimationDuration = const Duration(milliseconds: 250),
+    this.reverseSlideAnimationDuration = const Duration(milliseconds: 1000),
+    this.loadingAnimationDuration = const Duration(milliseconds: 350),
     Duration crossFadeDuration = const Duration(milliseconds: 250),
-    Curve slideAnimationCurve = Curves.decelerate,
-    Curve reverseSlideAnimationCurve = Curves.bounceIn,
-    Curve loadingAnimationCurve = Curves.easeInOut,
+    this.slideAnimationCurve = Curves.decelerate,
+    this.reverseSlideAnimationCurve = Curves.bounceIn,
+    this.loadingAnimationCurve = Curves.easeInOut,
     AlignmentGeometry iconAlignment = Alignment.center,
-    BorderRadius backgroundBorderRadius =
-        const BorderRadius.all(Radius.circular(100.0)),
+    this.backgroundBorderRadius =
+    const BorderRadius.all(Radius.circular(100.0)),
     BorderRadius? foregroundBorderRadius,
-    List<BoxShadow> boxShadow = const [
+    this.boxShadow = const [
       BoxShadow(
         color: Colors.black26,
         spreadRadius: 1,
@@ -242,55 +248,39 @@ class ActionSlider extends StatefulWidget {
         offset: Offset(0, 2),
       )
     ],
-    SliderBehavior sliderBehavior = SliderBehavior.move,
-    double actionThreshold = 1.0,
-    ThresholdType actionThresholdType = ThresholdType.instant,
-    StateChangeCallback? stateChangeCallback,
-  }) : this.custom(
-          key: key,
-          backgroundChild: customBackgroundBuilderChild,
-          backgroundBuilder: customBackgroundBuilder ??
-              (context, state, _) =>
-                  _standardBackgroundBuilder(context, state, child),
-          foregroundBuilder: (context, state, child) =>
-              _standardForegroundBuilder(
-            context,
-            state,
-            rolling,
-            icon,
-            loadingIcon,
-            successIcon,
-            failureIcon,
-            toggleColor,
-            customForegroundBuilder,
-            customForegroundBuilderChild,
-            foregroundBorderRadius,
-            iconAlignment,
-            crossFadeDuration,
-          ),
-          outerBackgroundBuilder: customOuterBackgroundBuilder,
-          outerBackgroundChild: customOuterBackgroundBuilderChild,
-          height: height,
-          toggleWidth: height - borderWidth * 2,
-          toggleMargin: EdgeInsets.all(borderWidth),
-          backgroundColor: backgroundColor,
-          action: action,
-          onTap: onTap,
-          controller: controller,
-          width: width,
-          slideAnimationDuration: slideAnimationDuration,
-          reverseSlideAnimationDuration: reverseSlideAnimationDuration,
-          loadingAnimationDuration: loadingAnimationDuration,
-          slideAnimationCurve: slideAnimationCurve,
-          reverseSlideAnimationCurve: reverseSlideAnimationCurve,
-          loadingAnimationCurve: loadingAnimationCurve,
-          backgroundBorderRadius: backgroundBorderRadius,
-          boxShadow: boxShadow,
-          sliderBehavior: sliderBehavior,
-          actionThreshold: actionThreshold,
-          actionThresholdType: actionThresholdType,
-          stateChangeCallback: stateChangeCallback,
-        );
+    this.sliderBehavior = SliderBehavior.move,
+    this.actionThreshold = 1.0,
+    this.actionThresholdType = ThresholdType.instant,
+    this.stateChangeCallback,
+    this.direction = TextDirection.ltr,
+  })
+      : backgroundChild = customBackgroundBuilderChild,
+        backgroundBuilder = (customBackgroundBuilder ??
+                (context, state, _) =>
+                _standardBackgroundBuilder(context, state, child)),
+        foregroundBuilder =
+        ((context, state, child) =>
+            _standardForegroundBuilder(
+              context,
+              state,
+              rolling,
+              icon,
+              loadingIcon,
+              successIcon,
+              failureIcon,
+              toggleColor,
+              customForegroundBuilder,
+              customForegroundBuilderChild,
+              foregroundBorderRadius,
+              iconAlignment,
+              crossFadeDuration,
+            )),
+        outerBackgroundBuilder = customOuterBackgroundBuilder,
+        outerBackgroundChild = customOuterBackgroundBuilderChild,
+        toggleWidth = height - borderWidth * 2,
+        toggleMargin = EdgeInsets.all(borderWidth),
+        foregroundChild = null,
+        super(key: key);
 
   static BackgroundBuilder _standardOuterBackgroundBuilder(
     BorderRadius backgroundBorderRadius,
@@ -310,6 +300,9 @@ class ActionSlider extends StatefulWidget {
 
   static Widget _standardBackgroundBuilder(
       BuildContext context, ActionSliderState state, Widget? child) {
+    Alignment clipAlignment = state.direction == TextDirection.rtl
+        ? Alignment.centerLeft
+        : Alignment.centerRight;
     return Padding(
       padding: EdgeInsets.only(
         left: state.toggleSize.height / 2,
@@ -322,10 +315,10 @@ class ActionSlider extends StatefulWidget {
           minWidth: state.standardSize.width - state.toggleSize.height,
           minHeight: state.toggleSize.height,
           child: Align(
-            alignment: Alignment.centerRight,
+            alignment: clipAlignment,
             child: ClipRect(
               child: Align(
-                alignment: Alignment.centerRight,
+                alignment: clipAlignment,
                 widthFactor: 1 - state.position,
                 child: Center(child: child),
               ),
@@ -336,26 +329,30 @@ class ActionSlider extends StatefulWidget {
     );
   }
 
-  static Widget _standardForegroundBuilder(
-    BuildContext context,
-    ActionSliderState state,
-    bool rotating,
-    Widget icon,
-    Widget? loadingIcon,
-    Widget successIcon,
-    Widget failureIcon,
-    Color? circleColor,
-    ForegroundBuilder? customForegroundBuilder,
-    Widget? customForegroundBuilderChild,
-    BorderRadius? foregroundBorderRadius,
-    AlignmentGeometry iconAlignment,
-    Duration crossFadeDuration,
-  ) {
+  static Widget _standardForegroundBuilder(BuildContext context,
+      ActionSliderState state,
+      bool rotating,
+      Widget? icon,
+      Widget? loadingIcon,
+      Widget successIcon,
+      Widget failureIcon,
+      Color? circleColor,
+      ForegroundBuilder? customForegroundBuilder,
+      Widget? customForegroundBuilderChild,
+      BorderRadius? foregroundBorderRadius,
+      AlignmentGeometry iconAlignment,
+      Duration crossFadeDuration,) {
+    icon ??= Icon(state.direction == TextDirection.rtl
+        ? Icons.keyboard_arrow_left_rounded
+        : Icons.keyboard_arrow_right_rounded);
     loadingIcon ??= SizedBox(
       width: 24.0,
       height: 24.0,
       child: CircularProgressIndicator(
-          strokeWidth: 2.0, color: Theme.of(context).iconTheme.color),
+          strokeWidth: 2.0, color: Theme
+          .of(context)
+          .iconTheme
+          .color),
     );
     double radius = state.size.height / 2;
 
@@ -385,8 +382,8 @@ class ActionSlider extends StatefulWidget {
           } else if (mode == SliderMode.standard || mode.isJump) {
             child = rotating
                 ? Transform.rotate(
-                    angle: state.position * state.size.width / radius,
-                    child: icon)
+                angle: state.position * state.size.width / radius,
+                child: icon)
                 : icon;
           } else {
             throw StateError('For using custom SliderModes you have to '
@@ -541,6 +538,7 @@ class _ActionSliderState extends State<ActionSlider>
       sliderMode: _controller.value,
       releasePosition: _state.releasePosition,
       toggleSize: oldActionSliderState.toggleSize,
+      direction: oldActionSliderState.direction,
     );
     if (_lastActionSliderState != actionSliderState) {
       widget.stateChangeCallback!
@@ -585,6 +583,18 @@ class _ActionSliderState extends State<ActionSlider>
 
             final toggleHeight = widget.height - widget.toggleMargin.vertical;
 
+            final direction = widget.direction ??
+                Directionality.maybeOf(context) ??
+                (throw 'No direction is set in ActionSlider and '
+                    'no TextDirection is found in BuildContext');
+
+            double localPositionToSliderPosition(double dx) {
+              double factor = direction == TextDirection.rtl ? -1.0 : 1.0;
+              double result =
+              ((dx - widget.toggleWidth / 2) * factor / backgroundWidth);
+              return result.clamp(0.0, 1.0);
+            }
+
             final actionSliderState = ActionSliderState(
               position: _state.position,
               size: Size(width, widget.height),
@@ -593,6 +603,7 @@ class _ActionSliderState extends State<ActionSlider>
               sliderMode: _controller.value,
               releasePosition: _state.releasePosition,
               toggleSize: Size(toggleWidth, toggleHeight),
+              direction: direction,
             );
 
             _changeState(_state, actionSliderState, setState: false);
@@ -622,15 +633,17 @@ class _ActionSliderState extends State<ActionSlider>
                         if (widget.backgroundBuilder != null)
                           Positioned.fill(
                             child: Builder(
-                              builder: (context) => widget.backgroundBuilder!(
-                                context,
-                                actionSliderState,
-                                widget.backgroundChild,
-                              ),
+                              builder: (context) =>
+                                  widget.backgroundBuilder!(
+                                    context,
+                                    actionSliderState,
+                                    widget.backgroundChild,
+                                  ),
                             ),
                           ),
-                        Positioned(
-                          left: togglePosition,
+                        Positioned.directional(
+                          textDirection: direction,
+                          start: togglePosition,
                           width: toggleWidth,
                           height: toggleHeight,
                           child: GestureDetector(
@@ -639,10 +652,8 @@ class _ActionSliderState extends State<ActionSlider>
                                   !_controller.value.expanded) return;
                               _changeState(
                                   SliderState(
-                                    position: ((details.localPosition.dx -
-                                                widget.toggleWidth / 2) /
-                                            backgroundWidth)
-                                        .clamp(0.0, 1.0),
+                                    position: localPositionToSliderPosition(
+                                        details.localPosition.dx),
                                     state: SlidingState.dragged,
                                   ),
                                   actionSliderState);
@@ -650,22 +661,20 @@ class _ActionSliderState extends State<ActionSlider>
                             onHorizontalDragUpdate: (details) {
                               if (_state.state == SlidingState.dragged) {
                                 double newPosition =
-                                    ((details.localPosition.dx -
-                                                widget.toggleWidth / 2) /
-                                            backgroundWidth)
-                                        .clamp(0.0, 1.0);
+                                localPositionToSliderPosition(
+                                    details.localPosition.dx);
                                 _changeState(
                                     widget.actionThresholdType ==
-                                                ThresholdType.release ||
-                                            newPosition < widget.actionThreshold
+                                        ThresholdType.release ||
+                                        newPosition < widget.actionThreshold
                                         ? SliderState(
-                                            position: newPosition,
-                                            state: SlidingState.dragged,
-                                          )
+                                      position: newPosition,
+                                      state: SlidingState.dragged,
+                                    )
                                         : SliderState(
-                                            position: newPosition,
-                                            state: SlidingState.released,
-                                            releasePosition: newPosition,
+                                      position: newPosition,
+                                      state: SlidingState.released,
+                                      releasePosition: newPosition,
                                           ),
                                     actionSliderState);
                                 if (_state.state == SlidingState.released) {
