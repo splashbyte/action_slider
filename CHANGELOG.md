@@ -1,5 +1,5 @@
 ## 0.6.1 [2022-12-09]
-- adds support for rtl
+- adds support for `RTL`
 - adds `direction` to constructors
 
 ## 0.6.0 [2022-07-05]
