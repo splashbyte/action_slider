@@ -238,7 +238,7 @@ class ActionSlider extends StatefulWidget {
     this.loadingAnimationCurve = Curves.easeInOut,
     AlignmentGeometry iconAlignment = Alignment.center,
     this.backgroundBorderRadius =
-    const BorderRadius.all(Radius.circular(100.0)),
+        const BorderRadius.all(Radius.circular(100.0)),
     BorderRadius? foregroundBorderRadius,
     this.boxShadow = const [
       BoxShadow(
@@ -253,28 +253,26 @@ class ActionSlider extends StatefulWidget {
     this.actionThresholdType = ThresholdType.instant,
     this.stateChangeCallback,
     this.direction = TextDirection.ltr,
-  })
-      : backgroundChild = customBackgroundBuilderChild,
+  })  : backgroundChild = customBackgroundBuilderChild,
         backgroundBuilder = (customBackgroundBuilder ??
-                (context, state, _) =>
+            (context, state, _) =>
                 _standardBackgroundBuilder(context, state, child)),
         foregroundBuilder =
-        ((context, state, child) =>
-            _standardForegroundBuilder(
-              context,
-              state,
-              rolling,
-              icon,
-              loadingIcon,
-              successIcon,
-              failureIcon,
-              toggleColor,
-              customForegroundBuilder,
-              customForegroundBuilderChild,
-              foregroundBorderRadius,
-              iconAlignment,
-              crossFadeDuration,
-            )),
+            ((context, state, child) => _standardForegroundBuilder(
+                  context,
+                  state,
+                  rolling,
+                  icon,
+                  loadingIcon,
+                  successIcon,
+                  failureIcon,
+                  toggleColor,
+                  customForegroundBuilder,
+                  customForegroundBuilderChild,
+                  foregroundBorderRadius,
+                  iconAlignment,
+                  crossFadeDuration,
+                )),
         outerBackgroundBuilder = customOuterBackgroundBuilder,
         outerBackgroundChild = customOuterBackgroundBuilderChild,
         toggleWidth = height - borderWidth * 2,
@@ -329,19 +327,21 @@ class ActionSlider extends StatefulWidget {
     );
   }
 
-  static Widget _standardForegroundBuilder(BuildContext context,
-      ActionSliderState state,
-      bool rotating,
-      Widget? icon,
-      Widget? loadingIcon,
-      Widget successIcon,
-      Widget failureIcon,
-      Color? circleColor,
-      ForegroundBuilder? customForegroundBuilder,
-      Widget? customForegroundBuilderChild,
-      BorderRadius? foregroundBorderRadius,
-      AlignmentGeometry iconAlignment,
-      Duration crossFadeDuration,) {
+  static Widget _standardForegroundBuilder(
+    BuildContext context,
+    ActionSliderState state,
+    bool rotating,
+    Widget? icon,
+    Widget? loadingIcon,
+    Widget successIcon,
+    Widget failureIcon,
+    Color? circleColor,
+    ForegroundBuilder? customForegroundBuilder,
+    Widget? customForegroundBuilderChild,
+    BorderRadius? foregroundBorderRadius,
+    AlignmentGeometry iconAlignment,
+    Duration crossFadeDuration,
+  ) {
     icon ??= Icon(state.direction == TextDirection.rtl
         ? Icons.keyboard_arrow_left_rounded
         : Icons.keyboard_arrow_right_rounded);
@@ -349,10 +349,7 @@ class ActionSlider extends StatefulWidget {
       width: 24.0,
       height: 24.0,
       child: CircularProgressIndicator(
-          strokeWidth: 2.0, color: Theme
-          .of(context)
-          .iconTheme
-          .color),
+          strokeWidth: 2.0, color: Theme.of(context).iconTheme.color),
     );
     double radius = state.size.height / 2;
 
@@ -382,8 +379,8 @@ class ActionSlider extends StatefulWidget {
           } else if (mode == SliderMode.standard || mode.isJump) {
             child = rotating
                 ? Transform.rotate(
-                angle: state.position * state.size.width / radius,
-                child: icon)
+                    angle: state.position * state.size.width / radius,
+                    child: icon)
                 : icon;
           } else {
             throw StateError('For using custom SliderModes you have to '
@@ -591,7 +588,7 @@ class _ActionSliderState extends State<ActionSlider>
             double localPositionToSliderPosition(double dx) {
               double factor = direction == TextDirection.rtl ? -1.0 : 1.0;
               double result =
-              ((dx - widget.toggleWidth / 2) * factor / backgroundWidth);
+                  ((dx - widget.toggleWidth / 2) * factor / backgroundWidth);
               return result.clamp(0.0, 1.0);
             }
 
@@ -633,12 +630,11 @@ class _ActionSliderState extends State<ActionSlider>
                         if (widget.backgroundBuilder != null)
                           Positioned.fill(
                             child: Builder(
-                              builder: (context) =>
-                                  widget.backgroundBuilder!(
-                                    context,
-                                    actionSliderState,
-                                    widget.backgroundChild,
-                                  ),
+                              builder: (context) => widget.backgroundBuilder!(
+                                context,
+                                actionSliderState,
+                                widget.backgroundChild,
+                              ),
                             ),
                           ),
                         Positioned.directional(
@@ -661,20 +657,20 @@ class _ActionSliderState extends State<ActionSlider>
                             onHorizontalDragUpdate: (details) {
                               if (_state.state == SlidingState.dragged) {
                                 double newPosition =
-                                localPositionToSliderPosition(
-                                    details.localPosition.dx);
+                                    localPositionToSliderPosition(
+                                        details.localPosition.dx);
                                 _changeState(
                                     widget.actionThresholdType ==
-                                        ThresholdType.release ||
-                                        newPosition < widget.actionThreshold
+                                                ThresholdType.release ||
+                                            newPosition < widget.actionThreshold
                                         ? SliderState(
-                                      position: newPosition,
-                                      state: SlidingState.dragged,
-                                    )
+                                            position: newPosition,
+                                            state: SlidingState.dragged,
+                                          )
                                         : SliderState(
-                                      position: newPosition,
-                                      state: SlidingState.released,
-                                      releasePosition: newPosition,
+                                            position: newPosition,
+                                            state: SlidingState.released,
+                                            releasePosition: newPosition,
                                           ),
                                     actionSliderState);
                                 if (_state.state == SlidingState.released) {

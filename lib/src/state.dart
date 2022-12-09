@@ -101,7 +101,7 @@ class ActionSliderState extends BaseActionSliderState {
     required this.standardSize,
     required this.toggleSize,
   }) : super(
-    position: position,
+          position: position,
           slidingState: slidingState,
           sliderMode: sliderMode,
           releasePosition: releasePosition,
