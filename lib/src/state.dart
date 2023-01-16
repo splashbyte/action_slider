@@ -4,20 +4,34 @@ import 'package:flutter/material.dart';
 enum SlidingState { dragged, released, compact }
 
 class SliderState {
-  final double position, releasePosition;
+  final double position, anchorPosition, releasePosition, dragStartPosition;
   final SlidingState state;
+  final SliderInterval allowedInterval;
 
-  SliderState(
-      {required this.position,
-      required this.state,
-      this.releasePosition = 0.0});
+  SliderState({
+    required this.position,
+    required this.state,
+    this.anchorPosition = 0.0,
+    this.releasePosition = 0.0,
+    this.dragStartPosition = 0.0,
+    this.allowedInterval = const SliderInterval(),
+  });
 
-  SliderState copyWith(
-          {double? position, SlidingState? state, double? releasePosition}) =>
+  SliderState copyWith({
+    double? position,
+    SlidingState? state,
+    double? anchorPosition,
+    double? releasePosition,
+    double? dragStartPosition,
+    SliderInterval? allowedInterval,
+  }) =>
       SliderState(
         position: position ?? this.position,
         state: state ?? this.state,
+        anchorPosition: anchorPosition ?? this.anchorPosition,
         releasePosition: releasePosition ?? this.releasePosition,
+        dragStartPosition: dragStartPosition ?? this.dragStartPosition,
+        allowedInterval: allowedInterval ?? this.allowedInterval,
       );
 
   @override
@@ -26,12 +40,22 @@ class SliderState {
       other is SliderState &&
           runtimeType == other.runtimeType &&
           position == other.position &&
+          anchorPosition == other.anchorPosition &&
           releasePosition == other.releasePosition &&
           state == other.state;
 
   @override
   int get hashCode =>
       position.hashCode ^ releasePosition.hashCode ^ state.hashCode;
+
+  @override
+  String toString() {
+    return 'SliderState{position: $position, '
+        'anchorPosition: $anchorPosition, '
+        'releasePosition: $releasePosition, '
+        'dragStartPosition: $dragStartPosition, '
+        'state: $state}';
+  }
 }
 
 class BaseActionSliderState {
@@ -45,10 +69,20 @@ class BaseActionSliderState {
   /// It can be set manually with the ActionSliderController.
   final SliderMode sliderMode;
 
+  /// The anchor position of the toggle.
+  final double anchorPosition;
+
   /// The position at which the toggle was released.
   /// Is only relevant if the [slidingState] is [SlidingState.released].
   /// The default value is 0.0.
   final double releasePosition;
+
+  /// The position at which the toggle was dragged.
+  /// Is only relevant if the [slidingState] is [SlidingState.dragged].
+  final double dragStartPosition;
+
+  /// The interval in which the toggle can be moved by the user.
+  final SliderInterval allowedInterval;
 
   /// The direction of the slider.
   final TextDirection direction;
@@ -57,7 +91,10 @@ class BaseActionSliderState {
     required this.position,
     required this.slidingState,
     required this.sliderMode,
+    required this.anchorPosition,
     required this.releasePosition,
+    required this.dragStartPosition,
+    required this.allowedInterval,
     required this.direction,
   });
 
@@ -92,21 +129,18 @@ class ActionSliderState extends BaseActionSliderState {
   final Size toggleSize;
 
   ActionSliderState({
-    required double position,
-    required SlidingState slidingState,
-    required SliderMode sliderMode,
-    required double releasePosition,
-    required TextDirection direction,
+    required super.position,
+    required super.slidingState,
+    required super.sliderMode,
+    required super.anchorPosition,
+    required super.releasePosition,
+    required super.dragStartPosition,
+    required super.allowedInterval,
+    required super.direction,
     required this.size,
     required this.standardSize,
     required this.toggleSize,
-  }) : super(
-          position: position,
-          slidingState: slidingState,
-          sliderMode: sliderMode,
-          releasePosition: releasePosition,
-          direction: direction,
-        );
+  });
 
   @override
   bool operator ==(Object other) =>

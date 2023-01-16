@@ -1,3 +1,10 @@
+## 0.7.0 [2022-01-16]
+- BREAKING: Increases minimum SDK to 2.17
+- BREAKING: changes state type of `ActionSliderController` from `SliderMode` to `ActionSliderControllerState`
+- adds `anchorPosition` and `allowedInterval` to `ActionSliderController`
+- adds `anchorPosition` and `allowedInterval` to `SliderState`
+- adds `ActionSliderController.dual`
+
 ## 0.6.1 [2022-12-09]
 - adds support for `RTL`
 - adds `direction` to constructors

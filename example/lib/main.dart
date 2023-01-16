@@ -44,11 +44,18 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            ActionSlider.standard(
+            ActionSlider.dual(
               width: 300.0,
-              actionThresholdType: ThresholdType.release,
-              child: const Text('Slide to confirm'),
-              action: (controller) async {
+              startChild: const Text('Start'),
+              endChild: const Text('End'),
+              startAction: (controller) async {
+                controller.loading(); //starts loading animation
+                await Future.delayed(const Duration(seconds: 3));
+                controller.success(); //starts success animation
+                await Future.delayed(const Duration(seconds: 1));
+                controller.reset(); //resets the slider
+              },
+              endAction: (controller) async {
                 controller.loading(); //starts loading animation
                 await Future.delayed(const Duration(seconds: 3));
                 controller.success(); //starts success animation

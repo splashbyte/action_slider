@@ -1,3 +1,47 @@
+class ActionSliderControllerState {
+  final SliderMode mode;
+  final double anchorPosition;
+  final SliderInterval allowedInterval;
+
+  ActionSliderControllerState(
+      this.mode, this.anchorPosition, this.allowedInterval);
+
+  ActionSliderControllerState copyWith(
+          {SliderMode? mode,
+          double? anchorPosition,
+          SliderInterval? allowedInterval}) =>
+      ActionSliderControllerState(
+        mode ?? this.mode,
+        anchorPosition ?? this.anchorPosition,
+        allowedInterval ?? this.allowedInterval,
+      );
+}
+
+class SliderInterval {
+  /// The minimum allowed value.
+  final double begin;
+
+  /// The maximum allowed value.
+  final double end;
+
+  double clamp(double d) => d.clamp(begin, end);
+
+  bool contains(double d) => d >= begin && d <= end;
+
+  const SliderInterval({this.begin = 0.0, this.end = 1.0});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SliderInterval &&
+          runtimeType == other.runtimeType &&
+          begin == other.begin &&
+          end == other.end;
+
+  @override
+  int get hashCode => begin.hashCode ^ end.hashCode;
+}
+
 class SliderMode {
   ///A unique key for this mode, which is used for the equals method.
   final dynamic key;
@@ -32,11 +76,11 @@ class SliderMode {
   }) : custom = false;
 
   static const loading =
-      SliderMode._internal(key: _SliderModeKey('loading'), result: false);
+  SliderMode._internal(key: _SliderModeKey('loading'), result: false);
   static const success =
-      SliderMode._internal(key: _SliderModeKey('success'), result: true);
+  SliderMode._internal(key: _SliderModeKey('success'), result: true);
   static const failure =
-      SliderMode._internal(key: _SliderModeKey('failure'), result: true);
+  SliderMode._internal(key: _SliderModeKey('failure'), result: true);
   static const standard = SliderMode._internal(
     key: _SliderModeKey('standard'),
     expanded: true,
@@ -48,19 +92,19 @@ class SliderMode {
 
   const SliderMode.jump(double pos)
       : this._internal(
-          key: const _SliderModeKey('jump'),
-          expanded: true,
-          jumpPosition: pos,
-        );
+    key: const _SliderModeKey('jump'),
+    expanded: true,
+    jumpPosition: pos,
+  );
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is SliderMode &&
-          runtimeType == other.runtimeType &&
-          key == other.key &&
-          custom == other.custom &&
-          jumpPosition == other.jumpPosition;
+          other is SliderMode &&
+              runtimeType == other.runtimeType &&
+              key == other.key &&
+              custom == other.custom &&
+              jumpPosition == other.jumpPosition;
 
   @override
   int get hashCode => key.hashCode ^ custom.hashCode ^ jumpPosition.hashCode;
@@ -80,4 +124,9 @@ class _SliderModeKey {
 
   @override
   int get hashCode => key.hashCode;
+
+  @override
+  String toString() {
+    return '_SliderModeKey{key: $key}';
+  }
 }

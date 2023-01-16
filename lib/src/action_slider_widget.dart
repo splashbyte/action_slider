@@ -26,14 +26,25 @@ typedef ForegroundBuilder = Widget Function(
 typedef Action = Function(ActionSliderController controller);
 typedef StateChangeCallback = Function(ActionSliderState? oldState,
     ActionSliderState state, ActionSliderController controller);
-typedef TapCallback = Function(ActionSliderController controller);
+typedef TapCallback = Function(ActionSliderController controller, double pos);
 
 class ActionSliderController extends ChangeNotifier
-    implements ValueListenable<SliderMode> {
-  SliderMode _value = SliderMode.standard;
+    implements ValueListenable<ActionSliderControllerState> {
+  ActionSliderControllerState _value;
+
+  ActionSliderController(
+      {double anchorPosition = 0.0,
+      SliderInterval allowedInterval = const SliderInterval()})
+      : _value = ActionSliderControllerState(
+            SliderMode.standard, anchorPosition, allowedInterval);
+
+  ActionSliderController.dual(
+      {double anchorPosition = 0.5,
+      SliderInterval allowedInterval = const SliderInterval()})
+      : this(anchorPosition: anchorPosition, allowedInterval: allowedInterval);
 
   @override
-  SliderMode get value => _value;
+  ActionSliderControllerState get value => _value;
 
   ///Sets the state to success
   void success() => _setMode(SliderMode.success);
@@ -44,12 +55,50 @@ class ActionSliderController extends ChangeNotifier
   ///Resets the slider to its expanded state
   void reset() => _setMode(SliderMode.standard);
 
+  void setAnchorPosition(double pos) {
+    if (_value.anchorPosition == pos) return;
+    if (!_value.allowedInterval.contains(pos)) {
+      throw ArgumentError(
+          'The allowed interval of a ActionSlider has to contain the anchor position');
+    }
+    _value = _value.copyWith(anchorPosition: pos);
+    notifyListeners();
+  }
+
+  void setAllowedInterval(SliderInterval interval) {
+    if (_value.allowedInterval == interval) return;
+    if (!interval.contains(_value.anchorPosition)) {
+      throw ArgumentError(
+          'The allowed interval of a ActionSlider has to contain the anchor position');
+    }
+    _value = _value.copyWith(allowedInterval: interval);
+    notifyListeners();
+  }
+
+  void setAnchorPositionAndAllowedInterval(
+      {double? anchorPosition, SliderInterval? allowedInterval}) {
+    anchorPosition ??= _value.anchorPosition;
+    allowedInterval ??= _value.allowedInterval;
+    if (_value.anchorPosition == anchorPosition &&
+        _value.allowedInterval == allowedInterval) {
+      return;
+    }
+    if (!allowedInterval.contains(anchorPosition)) {
+      throw ArgumentError(
+          'The allowed interval of a ActionSlider has to contain the anchor position');
+    }
+    _value = _value.copyWith(
+        anchorPosition: anchorPosition, allowedInterval: allowedInterval);
+    notifyListeners();
+  }
+
   ///Sets the state to loading
   void loading() => _setMode(SliderMode.loading);
 
-  ///The Toggle jumps to [pos] which should be between 0.0 and 1.0.
-  void jump([double pos = 0.3]) =>
-      _setMode(SliderMode.jump(pos.clamp(0.0, 1.0)));
+  ///The Toggle jumps to [anchorPosition + dif].
+  ///[dif] should be between -1.0 and 1.0.
+  void jump([double dif = 0.3]) =>
+      _setMode(SliderMode.jump((value.anchorPosition + dif).clamp(0.0, 1.0)));
 
   ///Allows to define custom [SliderMode]s.
   ///This is useful for other results like success or failure.
@@ -57,8 +106,8 @@ class ActionSliderController extends ChangeNotifier
   void custom(SliderMode mode) => _setMode(mode);
 
   void _setMode(SliderMode mode, {bool notify = true}) {
-    if (value == mode) return;
-    _value = mode;
+    if (value.mode == mode) return;
+    _value = _value.copyWith(mode: mode);
     if (notify) notifyListeners();
   }
 }
@@ -94,23 +143,29 @@ class ActionSlider extends StatefulWidget {
   ///The builder for the toggle.
   final ForegroundBuilder foregroundBuilder;
 
-  ///The duration for the sliding animation when the user taps anywhere on the widget.
+  ///The [Duration] for the sliding animation when the user taps anywhere on the widget.
   final Duration slideAnimationDuration;
 
-  ///The duration for the toggle coming back after the user released it or after the sliding animation.
+  ///The [Duration] for the toggle coming back after the user released it or after the sliding animation.
   final Duration reverseSlideAnimationDuration;
 
-  ///The duration for going into the loading mode.
+  ///The [Duration] for going into the loading mode.
   final Duration loadingAnimationDuration;
 
-  ///The curve for the sliding animation when the user taps anywhere on the widget.
+  ///The [Duration] for changing the position of the toggle.
+  final Duration movementDuration;
+
+  ///The [Curve] for the sliding animation when the user taps anywhere on the widget.
   final Curve slideAnimationCurve;
 
-  ///The curve for the toggle coming back after the user released it or after the sliding animation.
+  ///The [Curve] for the toggle coming back after the user released it or after the sliding animation.
   final Curve reverseSlideAnimationCurve;
 
-  ///The curve for going into the loading mode.
+  ///The [Curve] for going into the loading mode.
   final Curve loadingAnimationCurve;
+
+  ///The [Curve] for changing the position of the toggle.
+  final Curve movementCurve;
 
   ///The [Color] of the [Container] in the background.
   final Color? backgroundColor;
@@ -154,6 +209,8 @@ class ActionSlider extends StatefulWidget {
   /// If set to [null], the [TextDirection] is fetched from the [BuildContext].
   final TextDirection? direction;
 
+  final ActionSliderController Function() _defaultControllerBuilder;
+
   ///Constructor with very high customizability
   const ActionSlider.custom({
     Key? key,
@@ -175,9 +232,11 @@ class ActionSlider extends StatefulWidget {
     this.loadingAnimationDuration = const Duration(milliseconds: 350),
     this.width,
     this.reverseSlideAnimationDuration = const Duration(milliseconds: 250),
+    this.movementDuration = const Duration(milliseconds: 150),
     this.slideAnimationCurve = Curves.decelerate,
     this.reverseSlideAnimationCurve = Curves.bounceIn,
     this.loadingAnimationCurve = Curves.easeInOut,
+    this.movementCurve = Curves.linear,
     this.boxShadow = const [
       BoxShadow(
         color: Colors.black26,
@@ -192,11 +251,16 @@ class ActionSlider extends StatefulWidget {
     this.actionThresholdType = ThresholdType.instant,
     this.stateChangeCallback,
     this.direction = TextDirection.ltr,
-  }) : super(key: key);
+  })  : _defaultControllerBuilder = _controllerBuilder,
+        super(key: key);
 
-  static _defaultOnTap(ActionSliderController c) => c.jump();
+  static _defaultOnTap(ActionSliderController c, double pos) =>
+      c.jump(pos < c.value.anchorPosition ? -0.3 : 0.3);
 
-  ///Standard constructor for creating a Slider.
+  static ActionSliderController _controllerBuilder() =>
+      ActionSliderController();
+
+  ///Standard constructor for creating a slider.
   ///
   ///If [customForegroundBuilder] is not null, the values of [successIcon], [failureIcon], [loadingIcon] and [icon] are ignored.
   ///This is useful if you use your own [SliderMode]s.
@@ -231,11 +295,13 @@ class ActionSlider extends StatefulWidget {
     this.width,
     this.slideAnimationDuration = const Duration(milliseconds: 250),
     this.reverseSlideAnimationDuration = const Duration(milliseconds: 1000),
+    this.movementDuration = const Duration(milliseconds: 150),
     this.loadingAnimationDuration = const Duration(milliseconds: 350),
     Duration crossFadeDuration = const Duration(milliseconds: 250),
     this.slideAnimationCurve = Curves.decelerate,
     this.reverseSlideAnimationCurve = Curves.bounceIn,
     this.loadingAnimationCurve = Curves.easeInOut,
+    this.movementCurve = Curves.linear,
     AlignmentGeometry iconAlignment = Alignment.center,
     this.backgroundBorderRadius =
         const BorderRadius.all(Radius.circular(100.0)),
@@ -278,7 +344,145 @@ class ActionSlider extends StatefulWidget {
         toggleWidth = height - borderWidth * 2,
         toggleMargin = EdgeInsets.all(borderWidth),
         foregroundChild = null,
+        _defaultControllerBuilder = _controllerBuilder,
         super(key: key);
+
+  ///Standard constructor for creating a dual slider.
+  ///
+  ///If [customForegroundBuilder] is not null, the values of [successIcon], [failureIcon], [loadingIcon] and [icon] are ignored.
+  ///This is useful if you use your own [SliderMode]s.
+  ///You can also use [customForegroundBuilderChild] with the [customForegroundBuilder] for efficiency reasons.
+  ///
+  ///If [customBackgroundBuilder] is not null, the value of [child] is ignored.
+  ///You can also use [customBackgroundBuilderChild] with the [customBackgroundBuilder] for efficiency reasons.
+  ///
+  ///If [customOuterBackgroundBuilder] is not null, the values of [backgroundColor], [backgroundBorderRadius] and [boxShadow] are ignored.
+  ///You can also use [customOuterBackgroundBuilderChild] with the [customOuterBackgroundBuilder] for efficiency reasons.
+  ActionSlider.dual({
+    Key? key,
+    Widget? startChild,
+    Widget? endChild,
+    Widget? loadingIcon,
+    Widget successIcon = const Icon(Icons.check_rounded),
+    Widget failureIcon = const Icon(Icons.close_rounded),
+    Widget? icon,
+    ForegroundBuilder? customForegroundBuilder,
+    Widget? customForegroundBuilderChild,
+    BackgroundBuilder? customBackgroundBuilder,
+    Widget? customBackgroundBuilderChild,
+    BackgroundBuilder? customOuterBackgroundBuilder,
+    Widget? customOuterBackgroundBuilderChild,
+    Color? toggleColor,
+    this.backgroundColor,
+    this.height = 65.0,
+    double borderWidth = 5.0,
+    bool rolling = false,
+    Action? startAction,
+    Action? endAction,
+    this.onTap = _defaultOnTap,
+    this.controller,
+    this.width,
+    this.slideAnimationDuration = const Duration(milliseconds: 250),
+    this.reverseSlideAnimationDuration = const Duration(milliseconds: 1000),
+    this.movementDuration = const Duration(milliseconds: 150),
+    this.loadingAnimationDuration = const Duration(milliseconds: 350),
+    Duration crossFadeDuration = const Duration(milliseconds: 250),
+    this.slideAnimationCurve = Curves.decelerate,
+    this.reverseSlideAnimationCurve = Curves.bounceIn,
+    this.loadingAnimationCurve = Curves.easeInOut,
+    this.movementCurve = Curves.linear,
+    AlignmentGeometry iconAlignment = Alignment.center,
+    this.backgroundBorderRadius =
+        const BorderRadius.all(Radius.circular(100.0)),
+    BorderRadius? foregroundBorderRadius,
+    this.boxShadow = const [
+      BoxShadow(
+        color: Colors.black26,
+        spreadRadius: 1,
+        blurRadius: 2,
+        offset: Offset(0, 2),
+      )
+    ],
+    this.sliderBehavior = SliderBehavior.move,
+    double startActionThreshold = 0.0,
+    double endActionThreshold = 1.0,
+    this.actionThresholdType = ThresholdType.instant,
+    StateChangeCallback? stateChangeCallback,
+    this.direction = TextDirection.ltr,
+  })  : stateChangeCallback = _dualChangeCallback(
+            startAction,
+            endAction,
+            stateChangeCallback,
+            actionThresholdType,
+            startActionThreshold,
+            endActionThreshold),
+        backgroundChild = customBackgroundBuilderChild,
+        backgroundBuilder = (customBackgroundBuilder ??
+            (context, state, _) => _standardDualBackgroundBuilder(
+                context, state, startChild, endChild)),
+        foregroundBuilder =
+            ((context, state, child) => _standardForegroundBuilder(
+                  context,
+                  state,
+                  rolling,
+                  icon,
+                  loadingIcon,
+                  successIcon,
+                  failureIcon,
+                  toggleColor,
+                  customForegroundBuilder,
+                  customForegroundBuilderChild,
+                  foregroundBorderRadius,
+                  iconAlignment,
+                  crossFadeDuration,
+                )),
+        outerBackgroundBuilder = customOuterBackgroundBuilder,
+        outerBackgroundChild = customOuterBackgroundBuilderChild,
+        toggleWidth = height - borderWidth * 2,
+        toggleMargin = EdgeInsets.all(borderWidth),
+        foregroundChild = null,
+        actionThreshold = 1.0,
+        action = null,
+        _defaultControllerBuilder = _dualControllerBuilder,
+        super(key: key);
+
+  static ActionSliderController _dualControllerBuilder() =>
+      ActionSliderController.dual();
+
+  static StateChangeCallback _dualChangeCallback(
+      Action? startAction,
+      Action? endAction,
+      StateChangeCallback? callback,
+      ThresholdType thresholdType,
+      double startThreshold,
+      double endThreshold) {
+    return (ActionSliderState? oldState, ActionSliderState state,
+        ActionSliderController controller) {
+      if (oldState?.position != state.position ||
+          oldState?.slidingState != state.slidingState) {
+        switch (thresholdType) {
+          case ThresholdType.instant:
+            if (state.slidingState != SlidingState.dragged) break;
+            if (state.position <= startThreshold) {
+              startAction?.call(controller);
+            } else if (state.position >= endThreshold) {
+              endAction?.call(controller);
+            }
+            break;
+          case ThresholdType.release:
+            if (oldState?.slidingState == state.slidingState ||
+                state.slidingState != SlidingState.released) break;
+            if (state.position <= startThreshold) {
+              startAction?.call(controller);
+            } else if (state.position >= endThreshold) {
+              endAction?.call(controller);
+            }
+            break;
+        }
+      }
+      callback?.call(oldState, state, controller);
+    };
+  }
 
   static BackgroundBuilder _standardOuterBackgroundBuilder(
     BorderRadius backgroundBorderRadius,
@@ -324,6 +528,90 @@ class ActionSlider extends StatefulWidget {
           ),
         ),
       ),
+    );
+  }
+
+  static Widget _standardDualBackgroundBuilder(BuildContext context,
+      ActionSliderState state, Widget? startChild, Widget? endChild) {
+    Alignment clipAlignment = state.direction == TextDirection.rtl
+        ? Alignment.centerLeft
+        : Alignment.centerRight;
+    Alignment startClipAlignment = state.direction == TextDirection.rtl
+        ? Alignment.centerRight
+        : Alignment.centerLeft;
+    double relativeToggleWidth = state.toggleSize.height /
+        (state.standardSize.width - state.toggleSize.height * 2);
+    return Row(
+      textDirection: state.direction,
+      children: [
+        Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: state.toggleSize.height / 2,
+              right: state.toggleSize.height / 2,
+            ),
+            child: ClipRect(
+              child: OverflowBox(
+                maxWidth:
+                    state.standardSize.width / 2 - state.toggleSize.height,
+                maxHeight: state.toggleSize.height,
+                minWidth:
+                    state.standardSize.width / 2 - state.toggleSize.height,
+                minHeight: state.toggleSize.height,
+                child: Align(
+                  alignment: startClipAlignment,
+                  child: ClipRect(
+                    child: Align(
+                      alignment: startClipAlignment,
+                      widthFactor: 1.0 -
+                          ((state.anchorPosition -
+                                      0.5 * relativeToggleWidth -
+                                      state.position) /
+                                  (state.anchorPosition -
+                                      0.5 * relativeToggleWidth))
+                              .clamp(0.0, 1.0),
+                      child: Center(child: startChild),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: state.toggleSize.width / 2,
+              right: state.toggleSize.width / 2,
+            ),
+            child: ClipRect(
+              child: OverflowBox(
+                maxWidth: state.standardSize.width / 2 - state.toggleSize.width,
+                maxHeight: state.toggleSize.height,
+                minWidth: state.standardSize.width / 2 - state.toggleSize.width,
+                minHeight: state.toggleSize.height,
+                child: Align(
+                  alignment: clipAlignment,
+                  child: ClipRect(
+                    child: Align(
+                      alignment: clipAlignment,
+                      widthFactor: 1.0 -
+                          ((state.position -
+                                      (state.anchorPosition +
+                                          relativeToggleWidth * 0.5)) /
+                                  (1.0 -
+                                      (state.anchorPosition +
+                                          relativeToggleWidth * 0.5)))
+                              .clamp(0.0, 1.0),
+                      child: Center(child: endChild),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -401,8 +689,10 @@ class _ActionSliderState extends State<ActionSlider>
     with TickerProviderStateMixin {
   late final AnimationController _slideAnimationController;
   late final AnimationController _loadingAnimationController;
+  late final AnimationController _movementController;
   late final CurvedAnimation _slideAnimation;
   late final CurvedAnimation _loadingAnimation;
+  late final CurvedAnimation _movementAnimation;
   ActionSliderController? _localController;
   ActionSliderState? _lastActionSliderState;
 
@@ -431,7 +721,9 @@ class _ActionSliderState extends State<ActionSlider>
       if (_state.state != SlidingState.dragged) {
         _changeState(
             _state.copyWith(
-                position: _slideAnimation.value * _state.releasePosition),
+                position: _state.anchorPosition +
+                    _slideAnimation.value *
+                        (_state.releasePosition - _state.anchorPosition)),
             null);
       }
     });
@@ -442,16 +734,40 @@ class _ActionSliderState extends State<ActionSlider>
     });
 
     if (widget.controller == null) {
-      _localController = ActionSliderController();
+      _localController = widget._defaultControllerBuilder();
     }
-    _controller.addListener(_onModeChange);
+    _controller.addListener(_onControllerStateChange);
+
+    _movementController = AnimationController(
+      vsync: this,
+      duration: widget.movementDuration,
+      value: _controller.value.anchorPosition,
+    );
+    _movementAnimation = CurvedAnimation(
+      parent: _movementController,
+      curve: widget.movementCurve,
+    );
+    _movementAnimation.addListener(() {
+      _changeState(
+          _state.copyWith(
+              anchorPosition: _movementAnimation.value,
+              position: _movementAnimation.value +
+                  _slideAnimation.value *
+                      (_state.releasePosition - _movementAnimation.value)),
+          null);
+    });
+    _state = SliderState(
+      position: _controller.value.anchorPosition,
+      anchorPosition: _controller.value.anchorPosition,
+      state: SlidingState.released,
+    );
   }
 
   @override
   void dispose() {
     _slideAnimationController.dispose();
     _loadingAnimationController.dispose();
-    _controller.removeListener(_onModeChange);
+    _controller.removeListener(_onControllerStateChange);
     _localController?.dispose();
     super.dispose();
   }
@@ -461,14 +777,14 @@ class _ActionSliderState extends State<ActionSlider>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.controller != widget.controller) {
       _localController?.dispose();
-      oldWidget.controller?.removeListener(_onModeChange);
+      oldWidget.controller?.removeListener(_onControllerStateChange);
       if (widget.controller == null) {
         _localController = ActionSliderController();
       } else {
         _localController = null;
       }
-      _controller.removeListener(_onModeChange);
-      _controller.addListener(_onModeChange);
+      _controller.removeListener(_onControllerStateChange);
+      _controller.addListener(_onControllerStateChange);
     }
     _slideAnimationController.duration = widget.slideAnimationDuration;
     _slideAnimationController.reverseDuration =
@@ -479,12 +795,25 @@ class _ActionSliderState extends State<ActionSlider>
     _loadingAnimation.curve = widget.loadingAnimationCurve;
   }
 
-  void _onModeChange() {
-    if (_controller.value.expanded) {
-      if (_controller.value.jumpPosition > 0.0) {
+  void _onControllerStateChange() {
+    if (_controller.value.anchorPosition != _state.anchorPosition) {
+      _changeState(
+          _state.copyWith(anchorPosition: _controller.value.anchorPosition),
+          null);
+      _movementController.animateTo(_state.anchorPosition);
+    }
+    if (_controller.value.allowedInterval != _state.allowedInterval) {
+      //TODO: animate allowed interval
+      _changeState(
+          _state.copyWith(allowedInterval: _controller.value.allowedInterval),
+          null);
+    }
+    if (_controller.value.mode.expanded) {
+      if (_controller.value.mode.isJump) {
         if (_state.state == SlidingState.released) {
           _changeState(
-              _state.copyWith(releasePosition: _controller.value.jumpPosition),
+              _state.copyWith(
+                  releasePosition: _controller.value.mode.jumpPosition),
               null,
               setState: false);
           _slideAnimationController.forward();
@@ -494,11 +823,11 @@ class _ActionSliderState extends State<ActionSlider>
         if (_loadingAnimationController.isCompleted) {
           _changeState(
               _state.copyWith(
-                  position: 0.0,
+                  position: _movementAnimation.value,
                   releasePosition: 0.0,
                   state: SlidingState.released),
               null);
-        } else {
+        } else if (_loadingAnimationController.isAnimating) {
           _changeState(
               _state.copyWith(
                   position: _slideAnimationController.value,
@@ -515,7 +844,7 @@ class _ActionSliderState extends State<ActionSlider>
       _slideAnimationController.stop();
       _changeState(
           _state = _state.copyWith(
-              releasePosition: 0.0, state: SlidingState.compact),
+              releasePosition: _state.position, state: SlidingState.compact),
           null);
     }
   }
@@ -532,8 +861,11 @@ class _ActionSliderState extends State<ActionSlider>
       size: oldActionSliderState.size,
       standardSize: oldActionSliderState.standardSize,
       slidingState: _state.state,
-      sliderMode: _controller.value,
+      sliderMode: _controller.value.mode,
+      anchorPosition: _state.anchorPosition,
       releasePosition: _state.releasePosition,
+      dragStartPosition: _state.dragStartPosition,
+      allowedInterval: _state.allowedInterval,
       toggleSize: oldActionSliderState.toggleSize,
       direction: oldActionSliderState.direction,
     );
@@ -560,12 +892,12 @@ class _ActionSliderState extends State<ActionSlider>
             maxWidth - widget.toggleWidth - widget.toggleMargin.horizontal;
         return AnimatedBuilder(
           builder: (context, child) {
-            final width =
-                maxWidth - (_loadingAnimationController.value * standardWidth);
+            final width = maxWidth - (_loadingAnimation.value * standardWidth);
             final backgroundWidth =
                 width - widget.toggleWidth - widget.toggleMargin.horizontal;
-            final position =
-                (_state.position * backgroundWidth).clamp(0.0, backgroundWidth);
+            double statePosToLocalPos(double statePos) =>
+                (statePos * backgroundWidth).clamp(0.0, backgroundWidth);
+            final position = statePosToLocalPos(_state.position);
 
             double togglePosition;
             double toggleWidth;
@@ -574,8 +906,9 @@ class _ActionSliderState extends State<ActionSlider>
               togglePosition = position;
               toggleWidth = widget.toggleWidth;
             } else {
-              togglePosition = 0;
-              toggleWidth = position + widget.toggleWidth;
+              double anchorPos = statePosToLocalPos(_state.anchorPosition);
+              togglePosition = min(anchorPos, position);
+              toggleWidth = ((position - anchorPos).abs()) + widget.toggleWidth;
             }
 
             final toggleHeight = widget.height - widget.toggleMargin.vertical;
@@ -589,7 +922,7 @@ class _ActionSliderState extends State<ActionSlider>
               double factor = direction == TextDirection.rtl ? -1.0 : 1.0;
               double result =
                   ((dx - widget.toggleWidth / 2) * factor / backgroundWidth);
-              return result.clamp(0.0, 1.0);
+              return _state.allowedInterval.clamp(result);
             }
 
             final actionSliderState = ActionSliderState(
@@ -597,8 +930,11 @@ class _ActionSliderState extends State<ActionSlider>
               size: Size(width, widget.height),
               standardSize: Size(maxWidth, widget.height),
               slidingState: _state.state,
-              sliderMode: _controller.value,
+              sliderMode: _controller.value.mode,
+              anchorPosition: _state.anchorPosition,
               releasePosition: _state.releasePosition,
+              dragStartPosition: _state.dragStartPosition,
+              allowedInterval: _state.allowedInterval,
               toggleSize: Size(toggleWidth, toggleHeight),
               direction: direction,
             );
@@ -606,9 +942,10 @@ class _ActionSliderState extends State<ActionSlider>
             _changeState(_state, actionSliderState, setState: false);
 
             return GestureDetector(
-              onTap: () {
+              onTapUp: (details) {
                 if (_state.state != SlidingState.released) return;
-                widget.onTap?.call(_controller);
+                widget.onTap?.call(_controller,
+                    localPositionToSliderPosition(details.localPosition.dx));
               },
               child: SizedBox.fromSize(
                 size: actionSliderState.size,
@@ -645,12 +982,13 @@ class _ActionSliderState extends State<ActionSlider>
                           child: GestureDetector(
                             onHorizontalDragStart: (details) {
                               if (_state.state != SlidingState.released ||
-                                  !_controller.value.expanded) return;
+                                  !_controller.value.mode.expanded) return;
                               _changeState(
-                                  SliderState(
+                                  _state.copyWith(
                                     position: localPositionToSliderPosition(
-                                        details.localPosition.dx),
+                                        position + details.localPosition.dx),
                                     state: SlidingState.dragged,
+                                    dragStartPosition: _state.position,
                                   ),
                                   actionSliderState);
                             },
@@ -658,16 +996,20 @@ class _ActionSliderState extends State<ActionSlider>
                               if (_state.state == SlidingState.dragged) {
                                 double newPosition =
                                     localPositionToSliderPosition(
-                                        details.localPosition.dx);
+                                        statePosToLocalPos(
+                                                _state.dragStartPosition) +
+                                            details.localPosition.dx);
                                 _changeState(
                                     widget.actionThresholdType ==
                                                 ThresholdType.release ||
-                                            newPosition < widget.actionThreshold
-                                        ? SliderState(
+                                            newPosition <
+                                                widget.actionThreshold ||
+                                            widget.action == null
+                                        ? _state.copyWith(
                                             position: newPosition,
                                             state: SlidingState.dragged,
                                           )
-                                        : SliderState(
+                                        : _state.copyWith(
                                             position: newPosition,
                                             state: SlidingState.released,
                                             releasePosition: newPosition,
@@ -683,8 +1025,10 @@ class _ActionSliderState extends State<ActionSlider>
                               if (_state.state != SlidingState.dragged) return;
                               _changeState(
                                 _state.copyWith(
-                                    state: SlidingState.released,
-                                    releasePosition: _state.position),
+                                  state: SlidingState.released,
+                                  releasePosition: _state.position,
+                                  dragStartPosition: 0.0,
+                                ),
                                 actionSliderState,
                                 setState: false,
                               );
