@@ -160,7 +160,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 color: Color.lerp(Colors.red, Colors.green, state.position),
                 child: Center(
                     child: Text(state.position.toStringAsFixed(2),
-                        style: theme.textTheme.subtitle1)),
+                        style: theme.textTheme.titleMedium)),
               ),
               backgroundBorderRadius: BorderRadius.circular(5.0),
               action: (controller) async {
@@ -188,7 +188,7 @@ class _MyHomePageState extends State<MyHomePage> {
               foregroundBuilder: (context, state, child) => child!,
               backgroundChild: Center(
                 child: Text('Highly Customizable :)',
-                    style: theme.textTheme.subtitle1),
+                    style: theme.textTheme.titleMedium),
               ),
               backgroundBuilder: (context, state, child) => ClipRect(
                   child: OverflowBox(
