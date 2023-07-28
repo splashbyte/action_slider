@@ -490,17 +490,15 @@ class ActionSlider extends StatefulWidget {
     List<BoxShadow> boxShadow,
     double? width,
   ) {
-    return (context, state, child) => SizedBox(
-          width: width,
-          child: Container(
-            decoration: BoxDecoration(
-              color:
-                  backgroundColor ?? Theme.of(context).colorScheme.background,
-              borderRadius: backgroundBorderRadius,
-              boxShadow: boxShadow,
-            ),
-          ),
-        );
+    return (context, state, child) => Container(
+    width: width,
+      decoration: BoxDecoration(
+        color:
+            backgroundColor ?? Theme.of(context).colorScheme.background,
+        borderRadius: backgroundBorderRadius,
+        boxShadow: boxShadow,
+      ),
+    );
   }
 
   static Widget _standardBackgroundBuilder(
