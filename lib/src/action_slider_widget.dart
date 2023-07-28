@@ -492,7 +492,7 @@ class ActionSlider extends StatefulWidget {
   ) {
     return (context, state, child) => SizedBox(
           width: width,
-          child: DecoratedBox(
+          child: Container(
             decoration: BoxDecoration(
               color:
                   backgroundColor ?? Theme.of(context).colorScheme.background,
