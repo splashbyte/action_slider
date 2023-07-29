@@ -488,8 +488,7 @@ class ActionSlider extends StatefulWidget {
       BuildContext context, ActionSliderState state, Widget? child) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color:
-            backgroundColor ?? Theme.of(context).colorScheme.background,
+        color: backgroundColor ?? Theme.of(context).colorScheme.background,
         borderRadius: backgroundBorderRadius,
         boxShadow: boxShadow,
       ),

@@ -76,11 +76,11 @@ class SliderMode {
   }) : custom = false;
 
   static const loading =
-  SliderMode._internal(key: _SliderModeKey('loading'), result: false);
+      SliderMode._internal(key: _SliderModeKey('loading'), result: false);
   static const success =
-  SliderMode._internal(key: _SliderModeKey('success'), result: true);
+      SliderMode._internal(key: _SliderModeKey('success'), result: true);
   static const failure =
-  SliderMode._internal(key: _SliderModeKey('failure'), result: true);
+      SliderMode._internal(key: _SliderModeKey('failure'), result: true);
   static const standard = SliderMode._internal(
     key: _SliderModeKey('standard'),
     expanded: true,
@@ -92,19 +92,19 @@ class SliderMode {
 
   const SliderMode.jump(double pos)
       : this._internal(
-    key: const _SliderModeKey('jump'),
-    expanded: true,
-    jumpPosition: pos,
-  );
+          key: const _SliderModeKey('jump'),
+          expanded: true,
+          jumpPosition: pos,
+        );
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is SliderMode &&
-              runtimeType == other.runtimeType &&
-              key == other.key &&
-              custom == other.custom &&
-              jumpPosition == other.jumpPosition;
+      other is SliderMode &&
+          runtimeType == other.runtimeType &&
+          key == other.key &&
+          custom == other.custom &&
+          jumpPosition == other.jumpPosition;
 
   @override
   int get hashCode => key.hashCode ^ custom.hashCode ^ jumpPosition.hashCode;
