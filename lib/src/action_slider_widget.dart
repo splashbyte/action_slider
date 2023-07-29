@@ -484,14 +484,9 @@ class ActionSlider extends StatefulWidget {
     };
   }
 
-  static BackgroundBuilder _standardOuterBackgroundBuilder(
-    BorderRadius backgroundBorderRadius,
-    Color? backgroundColor,
-    List<BoxShadow> boxShadow,
-    double? width,
-  ) {
-    return (context, state, child) => SizedBox(
-          width: width,
+  Widget _standardOuterBackgroundBuilder(
+      BuildContext context, ActionSliderState state, Widget? child) {
+    return SizedBox.expand(
           child: DecoratedBox(
             decoration: BoxDecoration(
               color:
@@ -955,11 +950,7 @@ class _ActionSliderState extends State<ActionSlider>
                 child: Stack(
                   children: [
                     (widget.outerBackgroundBuilder ??
-                        ActionSlider._standardOuterBackgroundBuilder(
-                            widget.backgroundBorderRadius,
-                            widget.backgroundColor,
-                            widget.boxShadow,
-                            widget.width))(
+                        widget._standardOuterBackgroundBuilder)(
                       context,
                       actionSliderState,
                       widget.outerBackgroundChild,
