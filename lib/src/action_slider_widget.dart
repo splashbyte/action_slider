@@ -23,7 +23,7 @@ typedef BackgroundBuilder = Widget Function(
     BuildContext, ActionSliderState, Widget?);
 typedef ForegroundBuilder = Widget Function(
     BuildContext, ActionSliderState, Widget?);
-typedef Action = Function(ActionSliderController controller);
+typedef SliderAction = Function(ActionSliderController controller);
 typedef StateChangeCallback = Function(ActionSliderState? oldState,
     ActionSliderState state, ActionSliderController controller);
 typedef TapCallback = Function(ActionSliderController controller, double pos);
@@ -180,7 +180,7 @@ class ActionSlider extends StatefulWidget {
   ///Here you should call the loading, success and failure methods of the
   ///[controller] for controlling the further behaviour/animations of the
   ///slider.
-  final Action? action;
+  final SliderAction? action;
 
   ///Callback when the [ActionSliderState] changes.
   ///With this you can define more individual behavior than with [action], if it is necessary.
@@ -377,8 +377,8 @@ class ActionSlider extends StatefulWidget {
     this.height = 65.0,
     double borderWidth = 5.0,
     bool rolling = false,
-    Action? startAction,
-    Action? endAction,
+    SliderAction? startAction,
+    SliderAction? endAction,
     this.onTap = _defaultOnTap,
     this.controller,
     this.width,
@@ -450,8 +450,8 @@ class ActionSlider extends StatefulWidget {
       ActionSliderController.dual();
 
   static StateChangeCallback _dualChangeCallback(
-      Action? startAction,
-      Action? endAction,
+      SliderAction? startAction,
+      SliderAction? endAction,
       StateChangeCallback? callback,
       ThresholdType thresholdType,
       double startThreshold,
