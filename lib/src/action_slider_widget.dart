@@ -486,16 +486,14 @@ class ActionSlider extends StatefulWidget {
 
   Widget _standardOuterBackgroundBuilder(
       BuildContext context, ActionSliderState state, Widget? child) {
-    return SizedBox.expand(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color:
-                  backgroundColor ?? Theme.of(context).colorScheme.background,
-              borderRadius: backgroundBorderRadius,
-              boxShadow: boxShadow,
-            ),
-          ),
-        );
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color:
+            backgroundColor ?? Theme.of(context).colorScheme.background,
+        borderRadius: backgroundBorderRadius,
+        boxShadow: boxShadow,
+      ),
+    );
   }
 
   static Widget _standardBackgroundBuilder(
@@ -948,6 +946,7 @@ class _ActionSliderState extends State<ActionSlider>
               child: SizedBox.fromSize(
                 size: actionSliderState.size,
                 child: Stack(
+                  fit: StackFit.passthrough,
                   children: [
                     (widget.outerBackgroundBuilder ??
                         widget._standardOuterBackgroundBuilder)(

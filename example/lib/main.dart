@@ -66,7 +66,6 @@ class _MyHomePageState extends State<MyHomePage> {
             const SizedBox(height: 24.0),
             ActionSlider.standard(
               width: 300.0,
-              child: const Text('Slide to confirm'),
               action: (controller) async {
                 controller.loading(); //starts loading animation
                 await Future.delayed(const Duration(seconds: 3));
@@ -75,12 +74,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 controller.reset(); //resets the slider
               },
               direction: TextDirection.rtl,
+              child: const Text('Slide to confirm'),
             ),
             const SizedBox(height: 24.0),
             ActionSlider.standard(
               sliderBehavior: SliderBehavior.stretch,
               width: 300.0,
-              child: const Text('Slide to confirm'),
               backgroundColor: Colors.white,
               toggleColor: Colors.lightGreenAccent,
               action: (controller) async {
@@ -90,13 +89,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 await Future.delayed(const Duration(seconds: 1));
                 controller.reset(); //resets the slider
               },
+              child: const Text('Slide to confirm'),
             ),
             const SizedBox(height: 24.0),
             ActionSlider.standard(
               rolling: true,
               width: 300.0,
-              child: const Text('Rolling slider',
-                  style: TextStyle(color: Colors.white)),
               backgroundColor: Colors.black,
               reverseSlideAnimationCurve: Curves.easeInOut,
               reverseSlideAnimationDuration: const Duration(milliseconds: 500),
@@ -109,13 +107,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 await Future.delayed(const Duration(seconds: 1));
                 controller.reset(); //resets the slider
               },
+              child: const Text('Rolling slider',
+                  style: TextStyle(color: Colors.white)),
             ),
             const SizedBox(height: 24.0),
             ActionSlider.standard(
               sliderBehavior: SliderBehavior.stretch,
               rolling: true,
               width: 300.0,
-              child: const Text('Swipe right'),
               backgroundColor: Colors.white,
               toggleColor: Colors.amber,
               iconAlignment: Alignment.centerRight,
@@ -139,6 +138,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 await Future.delayed(const Duration(seconds: 1));
                 controller.reset(); //resets the slider
               },
+              child: const Text('Swipe right'),
             ),
             const SizedBox(height: 24.0),
             ActionSlider.custom(
