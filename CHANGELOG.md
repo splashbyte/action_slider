@@ -5,7 +5,7 @@
 - adds `anchorPosition` and `allowedInterval` to `ActionSliderController`
 - adds `anchorPosition` and `allowedInterval` to `SliderState`
 - adds `ActionSliderController.dual`
-- closes #6
+- closes [#6](https://github.com/splashbyte/action_slider/issues/6)
 
 ## 0.6.1 [2022-12-09]
 
