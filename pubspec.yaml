@@ -1,7 +1,7 @@
 name: action_slider
 description: A slider to confirm actions and provide feedback on the success of these after subsequent loading.
 version: 0.6.1
-repository: https://github.com/SplashByte/action_slider
+repository: https://github.com/splashbyte/action_slider
 
 environment:
   sdk: ">=2.17.0 <3.0.0"
@@ -14,6 +14,14 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^1.0.0
+  flutter_lints: ^2.0.2
 
 flutter:
+
+funding:
+  - https://buymeacoffee.com/splashbyte
+  - https://ko-fi.com/splashbyte
+
+screenshots:
+  - description: 'This image shows three examples of ActionSlider.'
+    path: screenshots/preview.webp

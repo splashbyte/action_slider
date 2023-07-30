@@ -87,7 +87,10 @@ class BaseActionSliderState {
   /// The direction of the slider.
   final TextDirection direction;
 
-  BaseActionSliderState({
+  /// The margin of the toggle.
+  final EdgeInsetsGeometry toggleMargin;
+
+  const BaseActionSliderState({
     required this.position,
     required this.slidingState,
     required this.sliderMode,
@@ -96,6 +99,7 @@ class BaseActionSliderState {
     required this.dragStartPosition,
     required this.allowedInterval,
     required this.direction,
+    required this.toggleMargin,
   });
 
   @override
@@ -128,7 +132,7 @@ class ActionSliderState extends BaseActionSliderState {
   /// The current size of the toggle.
   final Size toggleSize;
 
-  ActionSliderState({
+  const ActionSliderState({
     required super.position,
     required super.slidingState,
     required super.sliderMode,
@@ -137,6 +141,7 @@ class ActionSliderState extends BaseActionSliderState {
     required super.dragStartPosition,
     required super.allowedInterval,
     required super.direction,
+    required super.toggleMargin,
     required this.size,
     required this.standardSize,
     required this.toggleSize,
