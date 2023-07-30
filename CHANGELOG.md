@@ -1,6 +1,6 @@
 ## 0.7.0 [2023-07-30]
-- BREAKING: Increases minimum SDK to 2.17
-- BREAKING: Changes default background color from `ThemeData.backgroundColor` to `ThemeData.cardColor`
+- BREAKING: increases minimum SDK to 2.17
+- BREAKING: changes default background color from `ThemeData.backgroundColor` to `ThemeData.cardColor`
 - BREAKING: changes state type of `ActionSliderController` from `SliderMode` to `ActionSliderControllerState`
 - adds `anchorPosition` and `allowedInterval` to `ActionSliderController`
 - adds `anchorPosition` and `allowedInterval` to `SliderState`
