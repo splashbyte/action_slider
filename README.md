@@ -14,14 +14,23 @@ A slider to confirm actions and provide feedback on the success of these after s
 For a switch with a similar look, you can check out [animated_toggle_switch](https://pub.dev/packages/animated_toggle_switch).
 
 ## Examples
-![action_slider_example_snake](https://github.com/splashbyte/action_slider/assets/43761463/d2f92414-bded-48ae-9cf5-9df030fb0be8)  
-![action_slider_example_ltr](https://github.com/splashbyte/action_slider/assets/43761463/5d81d3d2-ca52-4eb5-93b3-fada883a6a4f)  
-![action_slider_example_dual](https://github.com/splashbyte/action_slider/assets/43761463/4903161e-d2f4-47aa-934a-464fba33d2df)  
-![action_slider_example_rolling](https://github.com/splashbyte/action_slider/assets/43761463/0a5010e2-d369-46d3-bdfb-0df5832125ed)  
-![action_slider_example_rolling_snake](https://github.com/splashbyte/action_slider/assets/43761463/e4f27603-83db-412a-8777-c737a9c55b14)  
-![action_slider_example_custom](https://github.com/splashbyte/action_slider/assets/43761463/3b751087-f721-40f2-9055-4aa8af61e0d8)  
+`ActionSlider.standard()` with `SliderBehavior.stretch`  
+![action_slider_example_snake](https://github.com/splashbyte/action_slider/assets/43761463/d2f92414-bded-48ae-9cf5-9df030fb0be8)
 
+`ActionSlider.standard()` with `TextDirection.rtl`  
+![action_slider_example_rtl](https://github.com/splashbyte/action_slider/assets/43761463/5d81d3d2-ca52-4eb5-93b3-fada883a6a4f)
 
+`ActionSlider.dual()`  
+![action_slider_example_dual](https://github.com/splashbyte/action_slider/assets/43761463/4903161e-d2f4-47aa-934a-464fba33d2df)
+
+`ActionSlider.standard()` with `rolling = true`  
+![action_slider_example_rolling](https://github.com/splashbyte/action_slider/assets/43761463/0a5010e2-d369-46d3-bdfb-0df5832125ed)
+
+`ActionSlider.standard()` with `SliderBehavior.stretch` and `rolling = true`  
+![action_slider_example_rolling_snake](https://github.com/splashbyte/action_slider/assets/43761463/e4f27603-83db-412a-8777-c737a9c55b14)
+
+You can build your own sliders with `ActionSlider.custom()`  
+![action_slider_example_custom](https://github.com/splashbyte/action_slider/assets/43761463/3b751087-f721-40f2-9055-4aa8af61e0d8)
 
 
 ## Easy Usage
