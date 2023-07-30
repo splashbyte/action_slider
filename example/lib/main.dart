@@ -58,7 +58,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 icon: Padding(
                   padding: const EdgeInsets.only(right: 2.0),
                   child: Transform.rotate(
-                      angle: 0.5 * pi, child: const Icon(Icons.unfold_more_rounded, size: 28.0)),
+                      angle: 0.5 * pi,
+                      child: const Icon(Icons.unfold_more_rounded, size: 28.0)),
                 ),
                 startAction: (controller) async {
                   controller.loading(); //starts loading animation

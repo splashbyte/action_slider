@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-///A simple widget for handling crossfades.
-///For a more customizable crossfade widget you can use the package cross_fade.
+/// A simple widget for handling crossfades.
+/// For a more customizable crossfade widget you can use the package cross_fade.
 class SliderCrossFade<T> extends StatefulWidget {
   final T current;
   final Widget Function(BuildContext, T)? builder;
@@ -21,7 +21,7 @@ class SliderCrossFade<T> extends StatefulWidget {
   static bool _standardEquals(dynamic t1, dynamic t2) => t1 == t2;
 
   @override
-  _SliderCrossFadeState<T> createState() => _SliderCrossFadeState<T>();
+  State<SliderCrossFade<T>> createState() => _SliderCrossFadeState<T>();
 }
 
 class _SliderCrossFadeState<T> extends State<SliderCrossFade<T>>
