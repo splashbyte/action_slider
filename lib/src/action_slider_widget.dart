@@ -504,8 +504,8 @@ class ActionSlider extends StatefulWidget {
         : Alignment.centerRight;
     return Padding(
       padding: EdgeInsets.only(
-        left: state.toggleSize.height / 2,
-        right: state.toggleSize.height / 2,
+        left: state.toggleSize.height,
+        right: state.toggleSize.height,
       ),
       child: ClipRect(
         child: OverflowBox(
