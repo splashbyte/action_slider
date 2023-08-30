@@ -211,6 +211,8 @@ class ActionSlider extends StatefulWidget {
 
   final ActionSliderController Function() _defaultControllerBuilder;
 
+  final bool needReverse;
+
   ///Constructor with very high customizability
   const ActionSlider.custom({
     Key? key,
@@ -251,6 +253,7 @@ class ActionSlider extends StatefulWidget {
     this.actionThresholdType = ThresholdType.instant,
     this.stateChangeCallback,
     this.direction = TextDirection.ltr,
+    this.needReverse = true,
   })  : _defaultControllerBuilder = _controllerBuilder,
         super(key: key);
 
@@ -321,6 +324,7 @@ class ActionSlider extends StatefulWidget {
     this.actionThresholdType = ThresholdType.instant,
     this.stateChangeCallback,
     this.direction = TextDirection.ltr,
+    this.needReverse = true,
   })  : backgroundChild = customBackgroundBuilderChild,
         backgroundBuilder = (customBackgroundBuilder ??
             (context, state, _) =>
@@ -411,6 +415,7 @@ class ActionSlider extends StatefulWidget {
     this.actionThresholdType = ThresholdType.instant,
     StateChangeCallback? stateChangeCallback,
     this.direction = TextDirection.ltr,
+    this.needReverse = true,
   })  : stateChangeCallback = _dualChangeCallback(
             startAction,
             endAction,
@@ -1040,7 +1045,9 @@ class _ActionSliderState extends State<ActionSlider>
                                 actionSliderState,
                                 setState: false,
                               );
-                              _slideAnimationController.reverse(from: 1.0);
+                              if (widget.needReverse) {
+                                  _slideAnimationController.reverse(from: 1.0);
+                              }
                               if (widget.actionThresholdType ==
                                       ThresholdType.release &&
                                   _state.position >= widget.actionThreshold) {
