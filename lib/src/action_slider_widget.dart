@@ -504,8 +504,12 @@ class ActionSlider extends StatefulWidget {
         : Alignment.centerRight;
     return Padding(
       padding: EdgeInsets.only(
-        left: state.toggleSize.height / 2,
-        right: state.toggleSize.height / 2,
+        left: state.direction == TextDirection.rtl
+            ? state.toggleSize.height / 2
+            : state.toggleSize.height,
+        right: state.direction == TextDirection.rtl
+            ? state.toggleSize.height
+            : state.toggleSize.height / 2,
       ),
       child: ClipRect(
         child: OverflowBox(
@@ -901,7 +905,8 @@ class _ActionSliderState extends State<ActionSlider>
           builder: (context, child) {
             final width = maxWidth - (_loadingAnimation.value * standardWidth);
             final backgroundWidth =
-                width - widget.toggleWidth - widget.toggleMargin.horizontal;
+                (width - widget.toggleWidth - widget.toggleMargin.horizontal)
+                    .abs();
             double statePosToLocalPos(double statePos) =>
                 (statePos * backgroundWidth).clamp(0.0, backgroundWidth);
             final position = statePosToLocalPos(_state.position);
