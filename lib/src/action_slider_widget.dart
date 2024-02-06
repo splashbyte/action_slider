@@ -903,7 +903,7 @@ class _ActionSliderState extends State<ActionSlider>
             final backgroundWidth =
                 width - widget.toggleWidth - widget.toggleMargin.horizontal;
             double statePosToLocalPos(double statePos) =>
-                (statePos * backgroundWidth).clamp(0.0, backgroundWidth);
+                statePos.clamp(0.0, 1.0) * backgroundWidth;
             final position = statePosToLocalPos(_state.position);
 
             double togglePosition;
@@ -958,6 +958,7 @@ class _ActionSliderState extends State<ActionSlider>
               child: SizedBox.fromSize(
                 size: actionSliderState.size,
                 child: Stack(
+                  clipBehavior: Clip.none,
                   fit: StackFit.passthrough,
                   children: [
                     (widget.outerBackgroundBuilder ??
@@ -968,102 +969,109 @@ class _ActionSliderState extends State<ActionSlider>
                     ),
                     Padding(
                       padding: widget.toggleMargin,
-                      child: Stack(children: [
-                        if (widget.backgroundBuilder != null)
-                          Positioned.fill(
-                            child: Opacity(
-                              opacity: 1 - _loadingAnimation.value,
-                              child: Builder(
-                                builder: (context) => widget.backgroundBuilder!(
-                                  context,
-                                  actionSliderState,
-                                  widget.backgroundChild,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          if (widget.backgroundBuilder != null)
+                            Positioned.fill(
+                              child: Opacity(
+                                opacity: 1 - _loadingAnimation.value,
+                                child: Builder(
+                                  builder: (context) =>
+                                      widget.backgroundBuilder!(
+                                    context,
+                                    actionSliderState,
+                                    widget.backgroundChild,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        Positioned.directional(
-                          textDirection: direction,
-                          start: togglePosition,
-                          width: toggleWidth,
-                          height: toggleHeight,
-                          child: GestureDetector(
-                            onHorizontalDragStart: (details) {
-                              if (_state.state != SlidingState.released ||
-                                  !_controller.value.mode.expanded) return;
-                              _changeState(
-                                  _state.copyWith(
-                                    position: localPositionToSliderPosition(
-                                        position + details.localPosition.dx),
-                                    state: SlidingState.dragged,
-                                    dragStartPosition: _state.position,
-                                  ),
-                                  actionSliderState);
-                            },
-                            onHorizontalDragUpdate: (details) {
-                              if (_state.state == SlidingState.dragged) {
-                                double newPosition =
-                                    localPositionToSliderPosition(
-                                        statePosToLocalPos(
-                                                _state.dragStartPosition) +
-                                            details.localPosition.dx);
+                          Positioned.directional(
+                            textDirection: direction,
+                            start: togglePosition,
+                            width: toggleWidth,
+                            height: toggleHeight,
+                            child: GestureDetector(
+                              onHorizontalDragStart: (details) {
+                                if (_state.state != SlidingState.released ||
+                                    !_controller.value.mode.expanded) return;
                                 _changeState(
-                                    widget.actionThresholdType ==
-                                                ThresholdType.release ||
-                                            newPosition <
-                                                widget.actionThreshold ||
-                                            widget.action == null
-                                        ? _state.copyWith(
-                                            position: newPosition,
-                                            state: SlidingState.dragged,
-                                          )
-                                        : _state.copyWith(
-                                            position: newPosition,
-                                            state: SlidingState.released,
-                                            releasePosition: newPosition,
-                                          ),
+                                    _state.copyWith(
+                                      position: localPositionToSliderPosition(
+                                          position + details.localPosition.dx),
+                                      state: SlidingState.dragged,
+                                      dragStartPosition: _state.position,
+                                    ),
                                     actionSliderState);
-                                if (_state.state == SlidingState.released) {
-                                  _slideAnimationController.reverse(from: 1.0);
+                              },
+                              onHorizontalDragUpdate: (details) {
+                                if (_state.state == SlidingState.dragged) {
+                                  double newPosition =
+                                      localPositionToSliderPosition(
+                                          statePosToLocalPos(
+                                                  _state.dragStartPosition) +
+                                              details.localPosition.dx);
+                                  _changeState(
+                                      widget.actionThresholdType ==
+                                                  ThresholdType.release ||
+                                              newPosition <
+                                                  widget.actionThreshold ||
+                                              widget.action == null
+                                          ? _state.copyWith(
+                                              position: newPosition,
+                                              state: SlidingState.dragged,
+                                            )
+                                          : _state.copyWith(
+                                              position: newPosition,
+                                              state: SlidingState.released,
+                                              releasePosition: newPosition,
+                                            ),
+                                      actionSliderState);
+                                  if (_state.state == SlidingState.released) {
+                                    _slideAnimationController.reverse(
+                                        from: 1.0);
+                                    _onSlide();
+                                  }
+                                }
+                              },
+                              onHorizontalDragEnd: (details) => setState(() {
+                                if (_state.state != SlidingState.dragged)
+                                  return;
+                                _changeState(
+                                  _state.copyWith(
+                                    state: SlidingState.released,
+                                    releasePosition: _state.position,
+                                    dragStartPosition: 0.0,
+                                  ),
+                                  actionSliderState,
+                                  setState: false,
+                                );
+                                _slideAnimationController.reverse(from: 1.0);
+                                if (widget.actionThresholdType ==
+                                        ThresholdType.release &&
+                                    _state.position >= widget.actionThreshold) {
                                   _onSlide();
                                 }
-                              }
-                            },
-                            onHorizontalDragEnd: (details) => setState(() {
-                              if (_state.state != SlidingState.dragged) return;
-                              _changeState(
-                                _state.copyWith(
-                                  state: SlidingState.released,
-                                  releasePosition: _state.position,
-                                  dragStartPosition: 0.0,
-                                ),
-                                actionSliderState,
-                                setState: false,
-                              );
-                              _slideAnimationController.reverse(from: 1.0);
-                              if (widget.actionThresholdType ==
-                                      ThresholdType.release &&
-                                  _state.position >= widget.actionThreshold) {
-                                _onSlide();
-                              }
-                            }),
-                            child: MouseRegion(
-                              cursor: _state.state == SlidingState.compact
-                                  ? MouseCursor.defer
-                                  : (_state.state == SlidingState.released
-                                      ? SystemMouseCursors.grab
-                                      : SystemMouseCursors.grabbing),
-                              child: Builder(
-                                builder: (context) => widget.foregroundBuilder(
-                                  context,
-                                  actionSliderState,
-                                  widget.foregroundChild,
+                              }),
+                              child: MouseRegion(
+                                cursor: _state.state == SlidingState.compact
+                                    ? MouseCursor.defer
+                                    : (_state.state == SlidingState.released
+                                        ? SystemMouseCursors.grab
+                                        : SystemMouseCursors.grabbing),
+                                child: Builder(
+                                  builder: (context) =>
+                                      widget.foregroundBuilder(
+                                    context,
+                                    actionSliderState,
+                                    widget.foregroundChild,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ]),
+                        ],
+                      ),
                     ),
                   ],
                 ),
