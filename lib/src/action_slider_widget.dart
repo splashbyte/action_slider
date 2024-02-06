@@ -1035,8 +1035,9 @@ class _ActionSliderState extends State<ActionSlider>
                                 }
                               },
                               onHorizontalDragEnd: (details) => setState(() {
-                                if (_state.state != SlidingState.dragged)
+                                if (_state.state != SlidingState.dragged) {
                                   return;
+                                }
                                 _changeState(
                                   _state.copyWith(
                                     state: SlidingState.released,
