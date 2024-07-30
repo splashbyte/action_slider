@@ -50,7 +50,6 @@ class _MyHomePageState extends State<MyHomePage> {
               style: const TextStyle(color: Colors.white),
               child: ActionSlider.dual(
                 backgroundBorderRadius: BorderRadius.circular(10.0),
-                foregroundBorderRadius: BorderRadius.circular(10.0),
                 width: 300.0,
                 backgroundColor: Colors.black,
                 startChild: const Text('Start'),
@@ -69,9 +68,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   controller.reset(); //resets the slider
                 },
                 endAction: (controller) async {
-                  controller.loading(); //starts loading animation
+                  controller.loadingExpanded(); //starts loading animation
                   await Future.delayed(const Duration(seconds: 3));
-                  controller.success(); //starts success animation
+                  controller.successExpanded(); //starts success animation
                   await Future.delayed(const Duration(seconds: 1));
                   controller.reset(); //resets the slider
                 },
@@ -79,16 +78,17 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             const SizedBox(height: 24.0),
             ActionSlider.standard(
+              resultToggleMargin: EdgeInsets.zero,
               sliderBehavior: SliderBehavior.stretch,
               width: 300.0,
               backgroundColor: Colors.white,
               toggleColor: Colors.lightGreenAccent,
               action: (controller) async {
-                controller.loading(); //starts loading animation
+                controller.loadingExpanded(); //starts loading animation
                 await Future.delayed(const Duration(seconds: 3));
-                controller.success(); //starts success animation
+                controller.successExpanded(); //starts success animation
                 await Future.delayed(const Duration(seconds: 1));
-                controller.reset(); //resets the slider
+                controller.reset();
               },
               child: const Text('Slide to confirm'),
             ),

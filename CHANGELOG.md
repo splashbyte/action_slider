@@ -1,3 +1,9 @@
+## 0.8.0-beta.0 [2024-07-30]
+- BREAKING: renames `movementCurve` to `anchorPositionCurve`
+- BREAKING: renames `movementDuration` to `anchorPositionDuration`
+- adds `resultToggleMargin`, `toggleMarginCurve` and `toggleMarginDuration`
+- adds `loadingExpanded`, `successExpanded` and `failureExpanded`
+
 ## 0.7.0 [2023-07-30]
 - BREAKING: increases minimum SDK to 2.17
 - BREAKING: changes default background color from `ThemeData.backgroundColor` to `ThemeData.cardColor`
