@@ -2,60 +2,70 @@ class ActionSliderControllerState {
   final SliderMode mode;
   final double anchorPosition;
   final SliderInterval allowedInterval;
+  final SliderDirection direction;
 
-  ActionSliderControllerState(
-      this.mode, this.anchorPosition, this.allowedInterval);
+  ActionSliderControllerState({
+    required this.mode,
+    required this.anchorPosition,
+    required this.allowedInterval,
+    required this.direction,
+  });
 
-  ActionSliderControllerState copyWith(
-          {SliderMode? mode,
-          double? anchorPosition,
-          SliderInterval? allowedInterval}) =>
+  ActionSliderControllerState copyWith({
+    SliderMode? mode,
+    double? anchorPosition,
+    SliderInterval? allowedInterval,
+    SliderDirection? direction,
+  }) =>
       ActionSliderControllerState(
-        mode ?? this.mode,
-        anchorPosition ?? this.anchorPosition,
-        allowedInterval ?? this.allowedInterval,
+        mode: mode ?? this.mode,
+        anchorPosition: anchorPosition ?? this.anchorPosition,
+        allowedInterval: allowedInterval ?? this.allowedInterval,
+        direction: direction ?? this.direction,
       );
 }
 
 class SliderInterval {
   /// The minimum allowed value.
-  final double begin;
+  final double start;
 
   /// The maximum allowed value.
   final double end;
 
-  double clamp(double d) => d.clamp(begin, end);
+  double clamp(double d) => d.clamp(start, end);
 
-  bool contains(double d) => d >= begin && d <= end;
+  bool contains(double d) => d >= start && d <= end;
 
-  const SliderInterval({this.begin = 0.0, this.end = 1.0});
+  const SliderInterval({this.start = 0.0, this.end = 1.0});
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is SliderInterval &&
           runtimeType == other.runtimeType &&
-          begin == other.begin &&
+          start == other.start &&
           end == other.end;
 
   @override
-  int get hashCode => begin.hashCode ^ end.hashCode;
+  int get hashCode => start.hashCode ^ end.hashCode;
 }
 
 class SliderMode {
-  ///A unique key for this mode, which is used for the equals method.
-  final dynamic key;
+  /// A unique key for this mode, which is used for the [==] method.
+  final Object? key;
 
-  ///Specifies the slider to be expanded in this mode. Otherwise it is compact.
+  /// Specifies the slider to be expanded in this mode. Otherwise it is compact.
   final bool expanded;
 
-  //TODO: remove 'custom' because of redundancy (use getter instead)
-  ///Indicates whether this mode is not natively provided by this package.
-  final bool custom;
+  /// Indicates whether this mode is not natively provided by this package.
+  bool get custom => key is! _SliderModeKey;
 
-  ///Indicates whether this mode is a result like [success] and [failure].
-  ///If so, by default the change is highlighted more clearly in the slider.
+  /// Indicates whether this mode is a result like [success], [failure] and [loading].
+  /// In this case the slider indicator is fixed at the end and not draggable.
   final bool result;
+
+  /// Indicates whether this mode gets highlighted more clearly in the slider.
+  final bool highlighted;
 
   ///Specifies how far the toggle should jump between 0 and 1.
   ///To adjust this value, please use [SliderMode.jump].
@@ -65,22 +75,48 @@ class SliderMode {
     required this.key,
     this.expanded = false,
     this.result = false,
-  })  : jumpPosition = 0.0,
-        custom = true;
+    this.highlighted = false,
+  }) : jumpPosition = 0.0;
 
   const SliderMode._internal({
     required this.key,
     this.expanded = false,
     this.result = false,
+    this.highlighted = false,
     this.jumpPosition = 0.0,
-  }) : custom = false;
+  });
 
-  static const loading =
-      SliderMode._internal(key: _SliderModeKey('loading'), result: false);
-  static const success =
-      SliderMode._internal(key: _SliderModeKey('success'), result: true);
-  static const failure =
-      SliderMode._internal(key: _SliderModeKey('failure'), result: true);
+  static const loading = SliderMode._internal(
+    key: _SliderModeKey('loading'),
+    result: true,
+    highlighted: false,
+  );
+  static const loadingExpanded = SliderMode._internal(
+      key: _SliderModeKey('loadingExpanded'),
+      result: true,
+      expanded: true,
+      highlighted: false);
+  static const success = SliderMode._internal(
+    key: _SliderModeKey('success'),
+    result: true,
+    highlighted: true,
+  );
+  static const successExpanded = SliderMode._internal(
+      key: _SliderModeKey('successExpanded'),
+      result: true,
+      expanded: true,
+      highlighted: true);
+  static const failure = SliderMode._internal(
+    key: _SliderModeKey('failure'),
+    result: true,
+    highlighted: true,
+  );
+  static const failureExpanded = SliderMode._internal(
+    key: _SliderModeKey('failureExpanded'),
+    result: true,
+    expanded: true,
+    highlighted: true,
+  );
   static const standard = SliderMode._internal(
     key: _SliderModeKey('standard'),
     expanded: true,
@@ -130,3 +166,5 @@ class _SliderModeKey {
     return '_SliderModeKey{key: $key}';
   }
 }
+
+enum SliderDirection { start, end }

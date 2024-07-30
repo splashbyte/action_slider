@@ -21,12 +21,45 @@ enum ThresholdType {
 
 typedef BackgroundBuilder = Widget Function(
     BuildContext, ActionSliderState, Widget?);
+typedef NullableForegroundBuilder = Widget? Function(
+    BuildContext, ActionSliderState, Widget?);
 typedef ForegroundBuilder = Widget Function(
     BuildContext, ActionSliderState, Widget?);
 typedef SliderAction = Function(ActionSliderController controller);
 typedef StateChangeCallback = Function(ActionSliderState? oldState,
     ActionSliderState state, ActionSliderController controller);
 typedef TapCallback = Function(ActionSliderController controller, double pos);
+
+BorderRadiusGeometry _edgeInsetsToBorderRadius(EdgeInsetsGeometry edgeInsets) {
+  return switch (edgeInsets) {
+    EdgeInsets() => BorderRadius.only(
+        topLeft: Radius.circular(min(edgeInsets.top, edgeInsets.left)),
+        topRight: Radius.circular(min(edgeInsets.top, edgeInsets.right)),
+        bottomLeft: Radius.circular(min(edgeInsets.bottom, edgeInsets.left)),
+        bottomRight: Radius.circular(min(edgeInsets.bottom, edgeInsets.right)),
+      ),
+    EdgeInsetsDirectional() => BorderRadiusDirectional.only(
+        topStart: Radius.circular(min(edgeInsets.top, edgeInsets.start)),
+        topEnd: Radius.circular(min(edgeInsets.top, edgeInsets.end)),
+        bottomStart: Radius.circular(min(edgeInsets.bottom, edgeInsets.start)),
+        bottomEnd: Radius.circular(min(edgeInsets.bottom, edgeInsets.end)),
+      ),
+    _ => BorderRadius.zero,
+  };
+}
+
+class _FixedValueListenable extends ValueListenable<double> {
+  @override
+  final double value;
+
+  _FixedValueListenable(this.value);
+
+  @override
+  void addListener(VoidCallback listener) {}
+
+  @override
+  void removeListener(VoidCallback listener) {}
+}
 
 class ActionSliderController extends ChangeNotifier
     implements ValueListenable<ActionSliderControllerState> {
@@ -36,7 +69,11 @@ class ActionSliderController extends ChangeNotifier
       {double anchorPosition = 0.0,
       SliderInterval allowedInterval = const SliderInterval()})
       : _value = ActionSliderControllerState(
-            SliderMode.standard, anchorPosition, allowedInterval);
+          mode: SliderMode.standard,
+          anchorPosition: anchorPosition,
+          allowedInterval: allowedInterval,
+          direction: SliderDirection.end,
+        );
 
   ActionSliderController.dual(
       {double anchorPosition = 0.5,
@@ -46,14 +83,29 @@ class ActionSliderController extends ChangeNotifier
   @override
   ActionSliderControllerState get value => _value;
 
-  ///Sets the state to success
-  void success() => _setMode(SliderMode.success);
+  ///Sets the state to success with a compact slider.
+  void success() => _setMode(SliderMode.success, SliderDirection.end);
 
-  ///Sets the state to failure
-  void failure() => _setMode(SliderMode.failure);
+  ///Sets the state to success with an expanded slider.
+  void successExpanded({SliderDirection direction = SliderDirection.end}) =>
+      _setMode(SliderMode.successExpanded, direction);
 
-  ///Resets the slider to its expanded state
-  void reset() => _setMode(SliderMode.standard);
+  ///Sets the state to failure with a compact slider.
+  void failure() => _setMode(SliderMode.failure, SliderDirection.end);
+
+  ///Sets the state to success with an expanded slider.
+  void failureExpanded({SliderDirection direction = SliderDirection.end}) =>
+      _setMode(SliderMode.failureExpanded, direction);
+
+  ///Sets the state to loading with a compact slider.
+  void loading() => _setMode(SliderMode.loading, SliderDirection.end);
+
+  ///Sets the state to loading with an expanded slider.
+  void loadingExpanded({SliderDirection direction = SliderDirection.end}) =>
+      _setMode(SliderMode.loadingExpanded, direction);
+
+  ///Resets the slider to its standard expanded state.
+  void reset() => _setMode(SliderMode.standard, SliderDirection.end);
 
   void setAnchorPosition(double pos) {
     if (_value.anchorPosition == pos) return;
@@ -92,22 +144,23 @@ class ActionSliderController extends ChangeNotifier
     notifyListeners();
   }
 
-  ///Sets the state to loading
-  void loading() => _setMode(SliderMode.loading);
-
   ///The Toggle jumps to [anchorPosition + dif].
   ///[dif] should be between -1.0 and 1.0.
-  void jump([double dif = 0.3]) =>
-      _setMode(SliderMode.jump((value.anchorPosition + dif).clamp(0.0, 1.0)));
+  void jump([double dif = 0.3]) => _setMode(
+      SliderMode.jump((value.anchorPosition + dif).clamp(0.0, 1.0)),
+      SliderDirection.end);
 
   ///Allows to define custom [SliderMode]s.
   ///This is useful for other results like success or failure.
   ///You get this modes in the [foregroundBuilder] of [ConfirmationSlider.custom] or in the [customForegroundBuilder] of [ConfirmationSlider.standard].
-  void custom(SliderMode mode) => _setMode(mode);
+  void custom(SliderMode mode,
+          {SliderDirection direction = SliderDirection.end}) =>
+      _setMode(mode, direction);
 
-  void _setMode(SliderMode mode, {bool notify = true}) {
+  void _setMode(SliderMode mode, SliderDirection direction,
+      {bool notify = true}) {
     if (value.mode == mode) return;
-    _value = _value.copyWith(mode: mode);
+    _value = _value.copyWith(mode: mode, direction: direction);
     if (notify) notifyListeners();
   }
 }
@@ -118,6 +171,10 @@ class ActionSlider extends StatefulWidget {
 
   ///The margin of the sliding toggle.
   final EdgeInsetsGeometry toggleMargin;
+
+  ///The margin of the sliding toggle when the current [SliderMode] is a result
+  ///like [SliderMode.success] or [SliderMode.failure].
+  final EdgeInsetsGeometry? resultToggleMargin;
 
   ///The total width of the widget. If this is [null] it uses the whole available width.
   final double? width;
@@ -150,10 +207,14 @@ class ActionSlider extends StatefulWidget {
   final Duration reverseSlideAnimationDuration;
 
   ///The [Duration] for going into the loading mode.
-  final Duration loadingAnimationDuration;
+  final Duration sizeAnimationDuration;
 
-  ///The [Duration] for changing the position of the toggle.
-  final Duration movementDuration;
+  ///The [Duration] for changing the position of the anchor.
+  final Duration anchorPositionDuration;
+
+  ///The [Duration] for changing the [toggleMargin] and animating
+  ///between [toggleMargin] and [resultToggleMargin].
+  final Duration toggleMarginDuration;
 
   ///The [Curve] for the sliding animation when the user taps anywhere on the widget.
   final Curve slideAnimationCurve;
@@ -162,16 +223,20 @@ class ActionSlider extends StatefulWidget {
   final Curve reverseSlideAnimationCurve;
 
   ///The [Curve] for going into the loading mode.
-  final Curve loadingAnimationCurve;
+  final Curve sizeAnimationCurve;
 
-  ///The [Curve] for changing the position of the toggle.
-  final Curve movementCurve;
+  ///The [Curve] for changing the position of the anchor.
+  final Curve anchorPositionCurve;
+
+  ///The [Curve] for changing the [toggleMargin] and animating
+  ///between [toggleMargin] and [resultToggleMargin].
+  final Curve toggleMarginCurve;
 
   ///The [Color] of the [Container] in the background.
   final Color? backgroundColor;
 
   ///[BorderRadius] of the [Container] in the background.
-  final BorderRadius backgroundBorderRadius;
+  final BorderRadiusGeometry backgroundBorderRadius;
 
   ///The [BoxShadow] of the background [Container].
   final List<BoxShadow> boxShadow;
@@ -229,14 +294,16 @@ class ActionSlider extends StatefulWidget {
         const BorderRadius.all(Radius.circular(100.0)),
     this.action,
     this.controller,
-    this.loadingAnimationDuration = const Duration(milliseconds: 350),
+    this.sizeAnimationDuration = const Duration(milliseconds: 350),
     this.width,
     this.reverseSlideAnimationDuration = const Duration(milliseconds: 250),
-    this.movementDuration = const Duration(milliseconds: 150),
+    this.anchorPositionDuration = const Duration(milliseconds: 150),
     this.slideAnimationCurve = Curves.decelerate,
     this.reverseSlideAnimationCurve = Curves.bounceIn,
-    this.loadingAnimationCurve = Curves.easeInOut,
-    this.movementCurve = Curves.linear,
+    this.sizeAnimationCurve = Curves.easeInOut,
+    this.anchorPositionCurve = Curves.linear,
+    this.toggleMarginCurve = Curves.easeInOut,
+    this.toggleMarginDuration = const Duration(milliseconds: 350),
     this.boxShadow = const [
       BoxShadow(
         color: Colors.black26,
@@ -251,6 +318,7 @@ class ActionSlider extends StatefulWidget {
     this.actionThresholdType = ThresholdType.instant,
     this.stateChangeCallback,
     this.direction = TextDirection.ltr,
+    this.resultToggleMargin,
   })  : _defaultControllerBuilder = _controllerBuilder,
         super(key: key);
 
@@ -280,7 +348,7 @@ class ActionSlider extends StatefulWidget {
     Widget successIcon = const Icon(Icons.check_rounded),
     Widget failureIcon = const Icon(Icons.close_rounded),
     Widget? icon,
-    ForegroundBuilder? customForegroundBuilder,
+    NullableForegroundBuilder? customForegroundBuilder,
     Widget? customForegroundBuilderChild,
     BackgroundBuilder? customBackgroundBuilder,
     Widget? customBackgroundBuilderChild,
@@ -297,17 +365,17 @@ class ActionSlider extends StatefulWidget {
     this.width,
     this.slideAnimationDuration = const Duration(milliseconds: 250),
     this.reverseSlideAnimationDuration = const Duration(milliseconds: 1000),
-    this.movementDuration = const Duration(milliseconds: 150),
-    this.loadingAnimationDuration = const Duration(milliseconds: 350),
+    this.anchorPositionDuration = const Duration(milliseconds: 150),
+    this.sizeAnimationDuration = const Duration(milliseconds: 350),
     Duration crossFadeDuration = const Duration(milliseconds: 250),
     this.slideAnimationCurve = Curves.decelerate,
     this.reverseSlideAnimationCurve = Curves.bounceIn,
-    this.loadingAnimationCurve = Curves.easeInOut,
-    this.movementCurve = Curves.linear,
+    this.sizeAnimationCurve = Curves.easeInOut,
+    this.anchorPositionCurve = Curves.linear,
     AlignmentGeometry iconAlignment = Alignment.center,
     this.backgroundBorderRadius =
         const BorderRadius.all(Radius.circular(100.0)),
-    BorderRadius? foregroundBorderRadius,
+    BorderRadiusGeometry? foregroundBorderRadius,
     this.boxShadow = const [
       BoxShadow(
         color: Colors.black26,
@@ -321,26 +389,31 @@ class ActionSlider extends StatefulWidget {
     this.actionThresholdType = ThresholdType.instant,
     this.stateChangeCallback,
     this.direction = TextDirection.ltr,
+    this.resultToggleMargin,
+    this.toggleMarginCurve = Curves.easeInOut,
+    this.toggleMarginDuration = const Duration(milliseconds: 350),
   })  : backgroundChild = customBackgroundBuilderChild,
         backgroundBuilder = (customBackgroundBuilder ??
             (context, state, _) =>
                 _standardBackgroundBuilder(context, state, child)),
-        foregroundBuilder =
-            ((context, state, child) => _standardForegroundBuilder(
-                  context,
-                  state,
-                  rolling,
-                  icon,
-                  loadingIcon,
-                  successIcon,
-                  failureIcon,
-                  toggleColor,
-                  customForegroundBuilder,
-                  customForegroundBuilderChild,
-                  foregroundBorderRadius,
-                  iconAlignment,
-                  crossFadeDuration,
-                )),
+        foregroundBuilder = ((context, state, child) =>
+            _standardForegroundBuilder(
+              context,
+              state,
+              rolling,
+              icon,
+              loadingIcon,
+              successIcon,
+              failureIcon,
+              toggleColor,
+              customForegroundBuilder,
+              customForegroundBuilderChild,
+              foregroundBorderRadius ??
+                  backgroundBorderRadius
+                      .subtract(_edgeInsetsToBorderRadius(state.toggleMargin)),
+              iconAlignment,
+              crossFadeDuration,
+            )),
         outerBackgroundBuilder = customOuterBackgroundBuilder,
         outerBackgroundChild = customOuterBackgroundBuilderChild,
         toggleWidth = height - borderWidth * 2,
@@ -386,17 +459,17 @@ class ActionSlider extends StatefulWidget {
     this.width,
     this.slideAnimationDuration = const Duration(milliseconds: 250),
     this.reverseSlideAnimationDuration = const Duration(milliseconds: 1000),
-    this.movementDuration = const Duration(milliseconds: 150),
-    this.loadingAnimationDuration = const Duration(milliseconds: 350),
+    this.anchorPositionDuration = const Duration(milliseconds: 150),
+    this.sizeAnimationDuration = const Duration(milliseconds: 350),
     Duration crossFadeDuration = const Duration(milliseconds: 250),
     this.slideAnimationCurve = Curves.decelerate,
     this.reverseSlideAnimationCurve = Curves.bounceIn,
-    this.loadingAnimationCurve = Curves.easeInOut,
-    this.movementCurve = Curves.linear,
+    this.sizeAnimationCurve = Curves.easeInOut,
+    this.anchorPositionCurve = Curves.linear,
     AlignmentGeometry iconAlignment = Alignment.center,
     this.backgroundBorderRadius =
         const BorderRadius.all(Radius.circular(100.0)),
-    BorderRadius? foregroundBorderRadius,
+    BorderRadiusGeometry? foregroundBorderRadius,
     this.boxShadow = const [
       BoxShadow(
         color: Colors.black26,
@@ -411,6 +484,9 @@ class ActionSlider extends StatefulWidget {
     this.actionThresholdType = ThresholdType.instant,
     StateChangeCallback? stateChangeCallback,
     this.direction = TextDirection.ltr,
+    this.resultToggleMargin,
+    this.toggleMarginCurve = Curves.easeInOut,
+    this.toggleMarginDuration = const Duration(milliseconds: 350),
   })  : stateChangeCallback = _dualChangeCallback(
             startAction,
             endAction,
@@ -422,22 +498,24 @@ class ActionSlider extends StatefulWidget {
         backgroundBuilder = (customBackgroundBuilder ??
             (context, state, _) => _standardDualBackgroundBuilder(
                 context, state, startChild, endChild)),
-        foregroundBuilder =
-            ((context, state, child) => _standardForegroundBuilder(
-                  context,
-                  state,
-                  rolling,
-                  icon,
-                  loadingIcon,
-                  successIcon,
-                  failureIcon,
-                  toggleColor,
-                  customForegroundBuilder,
-                  customForegroundBuilderChild,
-                  foregroundBorderRadius,
-                  iconAlignment,
-                  crossFadeDuration,
-                )),
+        foregroundBuilder = ((context, state, child) =>
+            _standardForegroundBuilder(
+              context,
+              state,
+              rolling,
+              icon,
+              loadingIcon,
+              successIcon,
+              failureIcon,
+              toggleColor,
+              customForegroundBuilder,
+              customForegroundBuilderChild,
+              foregroundBorderRadius ??
+                  backgroundBorderRadius
+                      .subtract(_edgeInsetsToBorderRadius(state.toggleMargin)),
+              iconAlignment,
+              crossFadeDuration,
+            )),
         outerBackgroundBuilder = customOuterBackgroundBuilder,
         outerBackgroundChild = customOuterBackgroundBuilderChild,
         toggleWidth = height - borderWidth * 2,
@@ -629,9 +707,9 @@ class ActionSlider extends StatefulWidget {
     Widget successIcon,
     Widget failureIcon,
     Color? circleColor,
-    ForegroundBuilder? customForegroundBuilder,
+    NullableForegroundBuilder? customForegroundBuilder,
     Widget? customForegroundBuilderChild,
-    BorderRadius? foregroundBorderRadius,
+    BorderRadiusGeometry foregroundBorderRadius,
     AlignmentGeometry iconAlignment,
     Duration crossFadeDuration,
   ) {
@@ -648,40 +726,36 @@ class ActionSlider extends StatefulWidget {
 
     return Container(
       decoration: BoxDecoration(
-          borderRadius: foregroundBorderRadius ??
-              BorderRadius.circular(state.toggleSize.height / 2),
+          borderRadius: foregroundBorderRadius,
           color: circleColor ?? Theme.of(context).primaryColor),
       child: SliderCrossFade<SliderMode>(
         duration: crossFadeDuration * (1 / 0.3),
         current: state.sliderMode,
         builder: (context, mode) {
-          if (customForegroundBuilder != null) {
-            return customForegroundBuilder(
-              context,
-              state,
-              customForegroundBuilderChild,
-            );
+          final customChild = customForegroundBuilder?.call(
+            context,
+            state,
+            customForegroundBuilderChild,
+          );
+          if (customChild != null) {
+            return Align(alignment: iconAlignment, child: customChild);
           }
-          Widget? child;
-          if (mode == SliderMode.loading) {
-            child = loadingIcon;
-          } else if (mode == SliderMode.success) {
-            child = successIcon;
-          } else if (mode == SliderMode.failure) {
-            child = failureIcon;
-          } else if (mode == SliderMode.standard || mode.isJump) {
-            child = rotating
-                ? Transform.rotate(
-                    angle: state.position * state.size.width / radius,
-                    child: icon)
-                : icon;
-          } else {
-            throw StateError('For using custom SliderModes you have to '
-                'set customForegroundBuilder!');
-          }
+          Widget child = switch (mode) {
+            SliderMode.loading || SliderMode.loadingExpanded => loadingIcon!,
+            SliderMode.success || SliderMode.successExpanded => successIcon,
+            SliderMode.failure || SliderMode.failureExpanded => failureIcon,
+            _ => mode == SliderMode.standard || mode.isJump
+                ? (rotating
+                    ? Transform.rotate(
+                        angle: state.position * state.size.width / radius,
+                        child: icon)
+                    : icon!)
+                : throw StateError('For using custom SliderModes you have to '
+                    'set customForegroundBuilder!'),
+          };
           return Align(alignment: iconAlignment, child: child);
         },
-        size: (m1, m2) => m2.result,
+        size: (m1, m2) => m2.highlighted,
       ),
     );
   }
@@ -693,11 +767,11 @@ class ActionSlider extends StatefulWidget {
 class _ActionSliderState extends State<ActionSlider>
     with TickerProviderStateMixin {
   late final AnimationController _slideAnimationController;
-  late final AnimationController _loadingAnimationController;
-  late final AnimationController _movementController;
+  late final AnimationController _anchorController;
   late final CurvedAnimation _slideAnimation;
-  late final CurvedAnimation _loadingAnimation;
-  late final CurvedAnimation _movementAnimation;
+  late final CurvedAnimation _anchorCurvedAnimation;
+  late final Animation<double> _anchorAnimation;
+  late final Tween<double> _anchorAnimationTween;
   ActionSliderController? _localController;
   ActionSliderState? _lastActionSliderState;
 
@@ -705,14 +779,12 @@ class _ActionSliderState extends State<ActionSlider>
       widget.controller ?? _localController!;
   SliderState _state = SliderState(position: 0.0, state: SlidingState.released);
 
+  /// The start position of the current running [_slideAnimation].
+  ValueListenable<double> _startPosition = _FixedValueListenable(0.0);
+
   @override
   void initState() {
     super.initState();
-    _loadingAnimationController = AnimationController(
-        vsync: this, duration: widget.loadingAnimationDuration);
-    _loadingAnimation = CurvedAnimation(
-        parent: _loadingAnimationController,
-        curve: widget.loadingAnimationCurve);
     _slideAnimationController = AnimationController(
         vsync: this,
         duration: widget.slideAnimationDuration,
@@ -724,17 +796,13 @@ class _ActionSliderState extends State<ActionSlider>
     _slideAnimation.addListener(() {
       //TODO: more efficiency
       if (_state.state != SlidingState.dragged) {
-        _changeState(
-            _state.copyWith(
-                position: _state.anchorPosition +
-                    _slideAnimation.value *
-                        (_state.releasePosition - _state.anchorPosition)),
-            null);
+        _updatePosition();
       }
     });
     _slideAnimation.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        _slideAnimationController.reverse();
+      if (status == AnimationStatus.completed &&
+          !_controller.value.mode.result) {
+        _dropSlider();
       }
     });
 
@@ -743,24 +811,19 @@ class _ActionSliderState extends State<ActionSlider>
     }
     _controller.addListener(_onControllerStateChange);
 
-    _movementController = AnimationController(
+    _anchorController = AnimationController(
       vsync: this,
-      duration: widget.movementDuration,
+      duration: widget.anchorPositionDuration,
       value: _controller.value.anchorPosition,
     );
-    _movementAnimation = CurvedAnimation(
-      parent: _movementController,
-      curve: widget.movementCurve,
-    );
-    _movementAnimation.addListener(() {
-      _changeState(
-          _state.copyWith(
-              anchorPosition: _movementAnimation.value,
-              position: _movementAnimation.value +
-                  _slideAnimation.value *
-                      (_state.releasePosition - _movementAnimation.value)),
-          null);
-    });
+    _anchorAnimation = Tween(
+            begin: _controller.value.anchorPosition,
+            end: _controller.value.anchorPosition)
+        .animate(_anchorCurvedAnimation = CurvedAnimation(
+      parent: _anchorController,
+      curve: widget.anchorPositionCurve,
+    ));
+    _anchorController.addListener(_updatePosition);
     _state = SliderState(
       position: _controller.value.anchorPosition,
       anchorPosition: _controller.value.anchorPosition,
@@ -768,10 +831,21 @@ class _ActionSliderState extends State<ActionSlider>
     );
   }
 
+  void _updatePosition({SlidingState? state}) {
+    _changeState(
+        _state.copyWith(
+          anchorPosition: _anchorAnimation.value,
+          position: _startPosition.value +
+              _slideAnimation.value *
+                  (_state.releasePosition - _startPosition.value),
+          state: state,
+        ),
+        null);
+  }
+
   @override
   void dispose() {
     _slideAnimationController.dispose();
-    _loadingAnimationController.dispose();
     _controller.removeListener(_onControllerStateChange);
     _localController?.dispose();
     super.dispose();
@@ -794,58 +868,59 @@ class _ActionSliderState extends State<ActionSlider>
     _slideAnimationController.duration = widget.slideAnimationDuration;
     _slideAnimationController.reverseDuration =
         widget.reverseSlideAnimationDuration;
-    _loadingAnimationController.duration = widget.loadingAnimationDuration;
     _slideAnimation.curve = widget.slideAnimationCurve;
     _slideAnimation.reverseCurve = widget.reverseSlideAnimationCurve;
-    _loadingAnimation.curve = widget.loadingAnimationCurve;
+    _anchorCurvedAnimation.curve = widget.anchorPositionCurve;
+    _anchorController.duration = widget.anchorPositionDuration;
   }
 
   void _onControllerStateChange() {
-    if (_controller.value.anchorPosition != _state.anchorPosition) {
-      _changeState(
-          _state.copyWith(anchorPosition: _controller.value.anchorPosition),
-          null);
-      _movementController.animateTo(_state.anchorPosition);
+    final controllerValue = _controller.value;
+    final direction = controllerValue.direction;
+    if (controllerValue.anchorPosition != _state.anchorPosition) {
+      _anchorAnimationTween.begin = _anchorAnimation.value;
+      _anchorAnimationTween.end = controllerValue.anchorPosition;
+      _anchorController.forward(from: 0.0);
+      _updatePosition();
     }
-    if (_controller.value.allowedInterval != _state.allowedInterval) {
+    if (controllerValue.allowedInterval != _state.allowedInterval) {
       //TODO: animate allowed interval
       _changeState(
-          _state.copyWith(allowedInterval: _controller.value.allowedInterval),
+          _state.copyWith(allowedInterval: controllerValue.allowedInterval),
           null);
     }
-    if (_controller.value.mode.expanded) {
-      if (_controller.value.mode.isJump) {
+    if (controllerValue.mode.expanded) {
+      if (controllerValue.mode.isJump) {
         if (_state.state == SlidingState.released) {
-          _changeState(
-              _state.copyWith(
-                  releasePosition: _controller.value.mode.jumpPosition),
-              null,
-              setState: false);
-          _slideAnimationController.forward();
+          _animateSliderTo(controllerValue.mode.jumpPosition);
         }
-        _controller._setMode(SliderMode.standard, notify: false);
+        _controller._setMode(SliderMode.standard, SliderDirection.end,
+            notify: false);
+      } else if (controllerValue.mode.result) {
+        _animateSliderTo(direction == SliderDirection.start
+            ? controllerValue.allowedInterval.start
+            : controllerValue.allowedInterval.end);
+        _updatePosition(state: SlidingState.fixed);
       } else {
-        if (_loadingAnimationController.isCompleted) {
+        if (_lastActionSliderState?.relativeSize != 0.0) {
+          _dropSlider();
+        } else {
+          _slideAnimationController.value = 0.0;
           _changeState(
               _state.copyWith(
-                  position: _movementAnimation.value,
-                  releasePosition: 0.0,
-                  state: SlidingState.released),
+                anchorPosition: _state.anchorPosition,
+                position: _state.anchorPosition,
+                state: SlidingState.released,
+              ),
               null);
-        } else if (_loadingAnimationController.isAnimating) {
-          _changeState(
-              _state.copyWith(
-                  position: _slideAnimationController.value,
-                  releasePosition: _slideAnimationController.value,
-                  state: SlidingState.released),
-              null,
-              setState: false);
-          _slideAnimationController.reverse(from: 1.0);
+          _anchorAnimationTween = Tween(
+            begin: controllerValue.anchorPosition,
+            end: controllerValue.anchorPosition,
+          );
+          _anchorController.stop();
         }
-        _loadingAnimationController.reverse();
       }
     } else {
-      _loadingAnimationController.forward();
       _slideAnimationController.stop();
       _changeState(
           _state = _state.copyWith(
@@ -854,11 +929,29 @@ class _ActionSliderState extends State<ActionSlider>
     }
   }
 
+  void _animateSliderTo(double position) {
+    _startPosition = _FixedValueListenable(_state.position);
+    _changeState(_state.copyWith(releasePosition: position), null,
+        setState: false);
+    _slideAnimationController.forward(from: 0.0);
+  }
+
+  void _dropSlider() {
+    _startPosition = _anchorAnimation;
+    _changeState(
+        _state.copyWith(
+          releasePosition: _state.position,
+          state: SlidingState.released,
+        ),
+        null,
+        setState: false);
+    _slideAnimationController.reverse(from: 1.0);
+  }
+
   void _changeState(SliderState state, ActionSliderState? oldActionSliderState,
       {bool setState = true}) {
     _state = state;
     if (setState) this.setState(() {});
-    if (widget.stateChangeCallback == null) return;
     oldActionSliderState ??= _lastActionSliderState;
     if (oldActionSliderState == null) return;
     final actionSliderState = ActionSliderState(
@@ -873,11 +966,12 @@ class _ActionSliderState extends State<ActionSlider>
       allowedInterval: _state.allowedInterval,
       toggleSize: oldActionSliderState.toggleSize,
       direction: oldActionSliderState.direction,
-      toggleMargin: widget.toggleMargin,
+      toggleMargin: oldActionSliderState.toggleMargin,
+      relativeSize: oldActionSliderState.relativeSize,
     );
     if (_lastActionSliderState != actionSliderState) {
-      widget.stateChangeCallback!
-          .call(_lastActionSliderState, actionSliderState, _controller);
+      widget.stateChangeCallback
+          ?.call(_lastActionSliderState, actionSliderState, _controller);
       _lastActionSliderState = actionSliderState;
     }
   }
@@ -896,189 +990,219 @@ class _ActionSliderState extends State<ActionSlider>
         }
         final standardWidth =
             maxWidth - widget.toggleWidth - widget.toggleMargin.horizontal;
-        return AnimatedBuilder(
-          animation: _loadingAnimation,
-          builder: (context, child) {
-            final width = maxWidth - (_loadingAnimation.value * standardWidth);
-            final backgroundWidth =
-                width - widget.toggleWidth - widget.toggleMargin.horizontal;
-            double statePosToLocalPos(double statePos) =>
-                statePos.clamp(0.0, 1.0) * backgroundWidth;
-            final position = statePosToLocalPos(_state.position);
+        final toggleMargin = _controller.value.mode.result
+            ? widget.resultToggleMargin ?? widget.toggleMargin
+            : widget.toggleMargin;
+        return TweenAnimationBuilder<EdgeInsetsGeometry>(
+            curve: widget.toggleMarginCurve,
+            duration: widget.toggleMarginDuration,
+            tween:
+                EdgeInsetsGeometryTween(begin: toggleMargin, end: toggleMargin),
+            builder: (context, toggleMargin, child) {
+              final relativeSize = _controller.value.mode.expanded ? 1.0 : 0.0;
+              return TweenAnimationBuilder<double>(
+                curve: widget.sizeAnimationCurve,
+                duration: widget.sizeAnimationDuration,
+                tween: Tween(begin: relativeSize, end: relativeSize),
+                builder: (context, relativeSize, child) {
+                  final width =
+                      maxWidth - ((1.0 - relativeSize) * standardWidth);
+                  final backgroundWidth =
+                      width - widget.toggleWidth - toggleMargin.horizontal;
+                  double statePosToLocalPos(double statePos) =>
+                      statePos.clamp(0.0, 1.0) * backgroundWidth;
+                  final position = statePosToLocalPos(_state.position);
 
-            double togglePosition;
-            double toggleWidth;
+                  double togglePosition;
+                  double toggleWidth;
 
-            if (widget.sliderBehavior == SliderBehavior.move) {
-              togglePosition = position;
-              toggleWidth = widget.toggleWidth;
-            } else {
-              double anchorPos = statePosToLocalPos(_state.anchorPosition);
-              togglePosition = min(anchorPos, position);
-              toggleWidth = ((position - anchorPos).abs()) + widget.toggleWidth;
-            }
+                  if (widget.sliderBehavior == SliderBehavior.move) {
+                    togglePosition = position;
+                    toggleWidth = widget.toggleWidth;
+                  } else {
+                    double anchorPos =
+                        statePosToLocalPos(_state.anchorPosition);
+                    togglePosition = min(anchorPos, position);
+                    toggleWidth =
+                        ((position - anchorPos).abs()) + widget.toggleWidth;
+                  }
 
-            final toggleHeight = widget.height - widget.toggleMargin.vertical;
+                  final toggleHeight = widget.height - toggleMargin.vertical;
 
-            final direction = widget.direction ??
-                Directionality.maybeOf(context) ??
-                (throw 'No direction is set in ActionSlider and '
-                    'no TextDirection is found in BuildContext');
+                  final direction = widget.direction ??
+                      Directionality.maybeOf(context) ??
+                      (throw 'No direction is set in ActionSlider and '
+                          'no TextDirection is found in BuildContext');
 
-            double localPositionToSliderPosition(double dx) {
-              double factor = direction == TextDirection.rtl ? -1.0 : 1.0;
-              double result =
-                  ((dx - widget.toggleWidth / 2) * factor / backgroundWidth);
-              return _state.allowedInterval.clamp(result);
-            }
+                  double localPositionToSliderPosition(double dx) {
+                    double factor = direction == TextDirection.rtl ? -1.0 : 1.0;
+                    return ((dx - widget.toggleWidth / 2) *
+                        factor /
+                        backgroundWidth);
+                  }
 
-            final actionSliderState = ActionSliderState(
-              position: _state.position,
-              size: Size(width, widget.height),
-              standardSize: Size(maxWidth, widget.height),
-              slidingState: _state.state,
-              sliderMode: _controller.value.mode,
-              anchorPosition: _state.anchorPosition,
-              releasePosition: _state.releasePosition,
-              dragStartPosition: _state.dragStartPosition,
-              allowedInterval: _state.allowedInterval,
-              toggleSize: Size(toggleWidth, toggleHeight),
-              direction: direction,
-              toggleMargin: widget.toggleMargin,
-            );
+                  final actionSliderState = ActionSliderState(
+                    position: _state.position,
+                    size: Size(width, widget.height),
+                    standardSize: Size(maxWidth, widget.height),
+                    slidingState: _state.state,
+                    sliderMode: _controller.value.mode,
+                    anchorPosition: _state.anchorPosition,
+                    releasePosition: _state.releasePosition,
+                    dragStartPosition: _state.dragStartPosition,
+                    allowedInterval: _state.allowedInterval,
+                    toggleSize: Size(toggleWidth, toggleHeight),
+                    direction: direction,
+                    toggleMargin: toggleMargin,
+                    relativeSize: relativeSize,
+                  );
 
-            _changeState(_state, actionSliderState, setState: false);
+                  _changeState(_state, actionSliderState, setState: false);
 
-            return GestureDetector(
-              onTapUp: (details) {
-                if (_state.state != SlidingState.released) return;
-                widget.onTap?.call(_controller,
-                    localPositionToSliderPosition(details.localPosition.dx));
-              },
-              child: SizedBox.fromSize(
-                size: actionSliderState.size,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  fit: StackFit.passthrough,
-                  children: [
-                    (widget.outerBackgroundBuilder ??
-                        widget._standardOuterBackgroundBuilder)(
-                      context,
-                      actionSliderState,
-                      widget.outerBackgroundChild,
-                    ),
-                    Padding(
-                      padding: widget.toggleMargin,
+                  return GestureDetector(
+                    onTapUp: (details) {
+                      if (_state.state != SlidingState.released) return;
+                      widget.onTap?.call(
+                          _controller,
+                          localPositionToSliderPosition(
+                              details.localPosition.dx));
+                    },
+                    child: SizedBox.fromSize(
+                      size: actionSliderState.size,
                       child: Stack(
                         clipBehavior: Clip.none,
+                        fit: StackFit.passthrough,
                         children: [
-                          if (widget.backgroundBuilder != null)
-                            Positioned.fill(
-                              child: Opacity(
-                                opacity: 1 - _loadingAnimation.value,
-                                child: Builder(
-                                  builder: (context) =>
-                                      widget.backgroundBuilder!(
-                                    context,
-                                    actionSliderState,
-                                    widget.backgroundChild,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          Positioned.directional(
-                            textDirection: direction,
-                            start: togglePosition,
-                            width: toggleWidth,
-                            height: toggleHeight,
-                            child: GestureDetector(
-                              onHorizontalDragStart: (details) {
-                                if (_state.state != SlidingState.released ||
-                                    !_controller.value.mode.expanded) return;
-                                _changeState(
-                                    _state.copyWith(
-                                      position: localPositionToSliderPosition(
-                                          position + details.localPosition.dx),
-                                      state: SlidingState.dragged,
-                                      dragStartPosition: _state.position,
+                          (widget.outerBackgroundBuilder ??
+                              widget._standardOuterBackgroundBuilder)(
+                            context,
+                            actionSliderState,
+                            widget.outerBackgroundChild,
+                          ),
+                          Padding(
+                            padding: toggleMargin,
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                if (widget.backgroundBuilder != null)
+                                  Positioned.fill(
+                                    child: Opacity(
+                                      opacity: relativeSize,
+                                      child: Builder(
+                                        builder: (context) =>
+                                            widget.backgroundBuilder!(
+                                          context,
+                                          actionSliderState,
+                                          widget.backgroundChild,
+                                        ),
+                                      ),
                                     ),
-                                    actionSliderState);
-                              },
-                              onHorizontalDragUpdate: (details) {
-                                if (_state.state == SlidingState.dragged) {
-                                  double newPosition =
-                                      localPositionToSliderPosition(
-                                          statePosToLocalPos(
-                                                  _state.dragStartPosition) +
-                                              details.localPosition.dx);
-                                  _changeState(
-                                      widget.actionThresholdType ==
-                                                  ThresholdType.release ||
-                                              newPosition <
-                                                  widget.actionThreshold ||
-                                              widget.action == null
-                                          ? _state.copyWith(
-                                              position: newPosition,
-                                              state: SlidingState.dragged,
-                                            )
-                                          : _state.copyWith(
-                                              position: newPosition,
-                                              state: SlidingState.released,
-                                              releasePosition: newPosition,
-                                            ),
-                                      actionSliderState);
-                                  if (_state.state == SlidingState.released) {
-                                    _slideAnimationController.reverse(
-                                        from: 1.0);
-                                    _onSlide();
-                                  }
-                                }
-                              },
-                              onHorizontalDragEnd: (details) => setState(() {
-                                if (_state.state != SlidingState.dragged)
-                                  return;
-                                _changeState(
-                                  _state.copyWith(
-                                    state: SlidingState.released,
-                                    releasePosition: _state.position,
-                                    dragStartPosition: 0.0,
                                   ),
-                                  actionSliderState,
-                                  setState: false,
-                                );
-                                _slideAnimationController.reverse(from: 1.0);
-                                if (widget.actionThresholdType ==
-                                        ThresholdType.release &&
-                                    _state.position >= widget.actionThreshold) {
-                                  _onSlide();
-                                }
-                              }),
-                              child: MouseRegion(
-                                cursor: _state.state == SlidingState.compact
-                                    ? MouseCursor.defer
-                                    : (_state.state == SlidingState.released
-                                        ? SystemMouseCursors.grab
-                                        : SystemMouseCursors.grabbing),
-                                child: Builder(
-                                  builder: (context) =>
-                                      widget.foregroundBuilder(
-                                    context,
-                                    actionSliderState,
-                                    widget.foregroundChild,
+                                Positioned.directional(
+                                  textDirection: direction,
+                                  start: togglePosition,
+                                  width: toggleWidth,
+                                  height: toggleHeight,
+                                  child: GestureDetector(
+                                    onHorizontalDragStart: (details) {
+                                      if (_state.state !=
+                                              SlidingState.released ||
+                                          !_controller.value.mode.expanded) {
+                                        return;
+                                      }
+                                      _changeState(
+                                          _state.copyWith(
+                                            position: _state.allowedInterval
+                                                .clamp(
+                                                    localPositionToSliderPosition(
+                                                        position +
+                                                            details
+                                                                .localPosition
+                                                                .dx)),
+                                            state: SlidingState.dragged,
+                                            dragStartPosition: _state.position,
+                                          ),
+                                          actionSliderState);
+                                    },
+                                    onHorizontalDragUpdate: (details) {
+                                      if (_state.state ==
+                                          SlidingState.dragged) {
+                                        double newPosition = _state
+                                            .allowedInterval
+                                            .clamp(localPositionToSliderPosition(
+                                                statePosToLocalPos(_state
+                                                        .dragStartPosition) +
+                                                    details.localPosition.dx));
+                                        _changeState(
+                                            widget.actionThresholdType ==
+                                                        ThresholdType.release ||
+                                                    newPosition <
+                                                        widget
+                                                            .actionThreshold ||
+                                                    widget.action == null
+                                                ? _state.copyWith(
+                                                    position: newPosition,
+                                                    state: SlidingState.dragged,
+                                                  )
+                                                : _state.copyWith(
+                                                    position: newPosition,
+                                                    state:
+                                                        SlidingState.released,
+                                                    releasePosition:
+                                                        newPosition,
+                                                  ),
+                                            actionSliderState);
+                                        if (_state.state ==
+                                            SlidingState.released) {
+                                          _slideAnimationController.reverse(
+                                              from: newPosition);
+                                          _onSlide();
+                                        }
+                                      }
+                                    },
+                                    onHorizontalDragEnd: (details) =>
+                                        setState(() {
+                                      if (_state.state !=
+                                          SlidingState.dragged) {
+                                        return;
+                                      }
+                                      _dropSlider();
+                                      if (widget.actionThresholdType ==
+                                              ThresholdType.release &&
+                                          _state.position >=
+                                              widget.actionThreshold) {
+                                        _onSlide();
+                                      }
+                                    }),
+                                    child: MouseRegion(
+                                      cursor: _state.state ==
+                                              SlidingState.compact
+                                          ? MouseCursor.defer
+                                          : (_state.state ==
+                                                  SlidingState.released
+                                              ? SystemMouseCursors.grab
+                                              : SystemMouseCursors.grabbing),
+                                      child: Builder(
+                                        builder: (context) =>
+                                            widget.foregroundBuilder(
+                                          context,
+                                          actionSliderState,
+                                          widget.foregroundChild,
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
+                  );
+                },
+              );
+            });
       },
     );
   }

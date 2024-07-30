@@ -1,10 +1,10 @@
 name: action_slider
 description: A slider to confirm actions and provide feedback on the success of these after subsequent loading.
-version: 0.7.0
+version: 0.8.0-beta.0
 repository: https://github.com/splashbyte/action_slider
 
 environment:
-  sdk: ">=2.17.0 <4.0.0"
+  sdk: ">=3.0.0 <4.0.0"
   flutter: ">=1.17.0"
 
 dependencies:

@@ -1,10 +1,14 @@
 import 'package:action_slider/action_slider.dart';
 import 'package:flutter/material.dart';
 
-enum SlidingState { dragged, released, compact }
+enum SlidingState { dragged, released, compact, fixed }
 
 class SliderState {
-  final double position, anchorPosition, releasePosition, dragStartPosition;
+  final double position,
+      anchorPosition,
+      releasePosition,
+      startPosition,
+      dragStartPosition;
   final SlidingState state;
   final SliderInterval allowedInterval;
 
@@ -13,6 +17,7 @@ class SliderState {
     required this.state,
     this.anchorPosition = 0.0,
     this.releasePosition = 0.0,
+    this.startPosition = 0.0,
     this.dragStartPosition = 0.0,
     this.allowedInterval = const SliderInterval(),
   });
@@ -22,6 +27,7 @@ class SliderState {
     SlidingState? state,
     double? anchorPosition,
     double? releasePosition,
+    double? startPosition,
     double? dragStartPosition,
     SliderInterval? allowedInterval,
   }) =>
@@ -30,6 +36,7 @@ class SliderState {
         state: state ?? this.state,
         anchorPosition: anchorPosition ?? this.anchorPosition,
         releasePosition: releasePosition ?? this.releasePosition,
+        startPosition: startPosition ?? this.startPosition,
         dragStartPosition: dragStartPosition ?? this.dragStartPosition,
         allowedInterval: allowedInterval ?? this.allowedInterval,
       );
@@ -132,6 +139,9 @@ class ActionSliderState extends BaseActionSliderState {
   /// The current size of the toggle.
   final Size toggleSize;
 
+  /// [1.0] indicates that the slider is expanded and [0.0] indicates that the slider is compact.
+  final double relativeSize;
+
   const ActionSliderState({
     required super.position,
     required super.slidingState,
@@ -145,6 +155,7 @@ class ActionSliderState extends BaseActionSliderState {
     required this.size,
     required this.standardSize,
     required this.toggleSize,
+    required this.relativeSize,
   });
 
   @override
@@ -159,7 +170,8 @@ class ActionSliderState extends BaseActionSliderState {
           slidingState == other.slidingState &&
           sliderMode == other.sliderMode &&
           releasePosition == other.releasePosition &&
-          direction == other.direction;
+          direction == other.direction &&
+          relativeSize == other.relativeSize;
 
   @override
   int get hashCode =>
@@ -170,5 +182,6 @@ class ActionSliderState extends BaseActionSliderState {
       slidingState.hashCode ^
       sliderMode.hashCode ^
       releasePosition.hashCode ^
-      direction.hashCode;
+      direction.hashCode ^
+      relativeSize.hashCode;
 }
