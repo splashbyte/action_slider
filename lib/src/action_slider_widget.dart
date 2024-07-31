@@ -4,6 +4,7 @@ import 'package:action_slider/action_slider.dart';
 import 'package:action_slider/src/cross_fade.dart';
 import 'package:action_slider/src/mode.dart';
 import 'package:action_slider/src/state.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -243,7 +244,7 @@ class ActionSlider extends StatefulWidget {
 
   ///Callback for sliding completely to the right.
   ///Here you should call the loading, success and failure methods of the
-  ///[controller] for controlling the further behaviour/animations of the
+  ///[controller] for controlling the further behavior/animations of the
   ///slider.
   final SliderAction? action;
 
@@ -260,8 +261,8 @@ class ActionSlider extends StatefulWidget {
   ///Controller for controlling the widget from everywhere.
   final ActionSliderController? controller;
 
-  ///This [SliderBehavior] defines the behaviour when moving the toggle.
-  final SliderBehavior? sliderBehavior;
+  ///This [SliderBehavior] defines the behavior when moving the toggle.
+  final SliderBehavior sliderBehavior;
 
   ///The threshold at which the action should be triggered. Should be between 0.0 and 1.0.
   final double actionThreshold;
@@ -613,25 +614,25 @@ class ActionSlider extends StatefulWidget {
     Alignment endAlignment =
         AlignmentDirectional.centerEnd.resolve(state.direction);
     double innerWidth = state.standardSize.width -
-        state.toggleSize.width -
+        state.defaultToggleSize.width -
         state.toggleMargin.horizontal;
     final startSize = Size(
-        innerWidth * state.anchorPosition + state.toggleSize.width / 2,
-        state.toggleSize.height);
+        innerWidth * state.anchorPosition + state.defaultToggleSize.width / 2,
+        state.defaultToggleSize.height);
     final endSize = Size(
         state.standardSize.width -
             state.toggleMargin.horizontal -
             startSize.width,
-        state.toggleSize.height);
+        state.defaultToggleSize.height);
     return Row(
       textDirection: state.direction,
       children: [
         SizedBox(
           width: (state.size.width -
-                      state.toggleSize.width -
+                      state.defaultToggleSize.width -
                       state.toggleMargin.horizontal) *
                   state.anchorPosition +
-              state.toggleSize.width / 2,
+              state.defaultToggleSize.width / 2,
           child: ClipRect(
             child: OverflowBox(
               maxWidth: startSize.width,
@@ -647,12 +648,12 @@ class ActionSlider extends StatefulWidget {
                         ((1.0 - state.position / state.anchorPosition) *
                                 (1.0 -
                                     0.5 *
-                                        state.toggleSize.width /
+                                        state.defaultToggleSize.width /
                                         startSize.width))
                             .clamp(0.0, 1.0),
                     child: Padding(
                       padding: EdgeInsetsDirectional.only(
-                              end: state.toggleSize.width / 2)
+                              end: state.defaultToggleSize.width / 2)
                           .resolve(state.direction),
                       child: Center(child: startChild),
                     ),
@@ -679,12 +680,12 @@ class ActionSlider extends StatefulWidget {
                                     (1.0 - state.anchorPosition)) *
                                 (1.0 -
                                     0.5 *
-                                        state.toggleSize.width /
+                                        state.defaultToggleSize.width /
                                         endSize.width))
                             .clamp(0.0, 1.0),
                     child: Padding(
                       padding: EdgeInsetsDirectional.only(
-                              start: state.toggleSize.width / 2)
+                              start: state.defaultToggleSize.width / 2)
                           .resolve(state.direction),
                       child: Center(child: endChild),
                     ),
@@ -713,21 +714,26 @@ class ActionSlider extends StatefulWidget {
     AlignmentGeometry iconAlignment,
     Duration crossFadeDuration,
   ) {
+    final theme = Theme.of(context);
     icon ??= Icon(state.direction == TextDirection.rtl
         ? Icons.keyboard_arrow_left_rounded
         : Icons.keyboard_arrow_right_rounded);
-    loadingIcon ??= SizedBox(
-      width: 24.0,
-      height: 24.0,
-      child: CircularProgressIndicator(
-          strokeWidth: 2.0, color: Theme.of(context).iconTheme.color),
-    );
+    loadingIcon ??= switch (theme.platform) {
+      TargetPlatform.iOS ||
+      TargetPlatform.macOS =>
+        CupertinoActivityIndicator(color: theme.iconTheme.color),
+      _ => SizedBox.square(
+          dimension: 24.0,
+          child: CircularProgressIndicator(
+              strokeWidth: 2.0, color: theme.iconTheme.color),
+        ),
+    };
     double radius = state.size.height / 2;
 
     return Container(
       decoration: BoxDecoration(
           borderRadius: foregroundBorderRadius,
-          color: circleColor ?? Theme.of(context).primaryColor),
+          color: circleColor ?? theme.primaryColor),
       child: SliderCrossFade<SliderMode>(
         duration: crossFadeDuration * (1 / 0.3),
         current: state.sliderMode,
@@ -968,6 +974,7 @@ class _ActionSliderState extends State<ActionSlider>
       direction: oldActionSliderState.direction,
       toggleMargin: oldActionSliderState.toggleMargin,
       relativeSize: oldActionSliderState.relativeSize,
+      defaultToggleSize: oldActionSliderState.defaultToggleSize,
     );
     if (_lastActionSliderState != actionSliderState) {
       widget.stateChangeCallback
@@ -1016,15 +1023,16 @@ class _ActionSliderState extends State<ActionSlider>
                   double togglePosition;
                   double toggleWidth;
 
-                  if (widget.sliderBehavior == SliderBehavior.move) {
-                    togglePosition = position;
-                    toggleWidth = widget.toggleWidth;
-                  } else {
-                    double anchorPos =
-                        statePosToLocalPos(_state.anchorPosition);
-                    togglePosition = min(anchorPos, position);
-                    toggleWidth =
-                        ((position - anchorPos).abs()) + widget.toggleWidth;
+                  switch (widget.sliderBehavior) {
+                    case SliderBehavior.move:
+                      togglePosition = position;
+                      toggleWidth = widget.toggleWidth;
+                    case SliderBehavior.stretch:
+                      double anchorPos =
+                          statePosToLocalPos(_state.anchorPosition);
+                      togglePosition = min(anchorPos, position);
+                      toggleWidth =
+                          ((position - anchorPos).abs()) + widget.toggleWidth;
                   }
 
                   final toggleHeight = widget.height - toggleMargin.vertical;
@@ -1055,6 +1063,7 @@ class _ActionSliderState extends State<ActionSlider>
                     direction: direction,
                     toggleMargin: toggleMargin,
                     relativeSize: relativeSize,
+                    defaultToggleSize: Size(widget.toggleWidth, toggleHeight),
                   );
 
                   _changeState(_state, actionSliderState, setState: false);

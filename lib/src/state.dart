@@ -139,6 +139,9 @@ class ActionSliderState extends BaseActionSliderState {
   /// The current size of the toggle.
   final Size toggleSize;
 
+  /// The compact/unstretched size of the toggle.
+  final Size defaultToggleSize;
+
   /// [1.0] indicates that the slider is expanded and [0.0] indicates that the slider is compact.
   final double relativeSize;
 
@@ -156,6 +159,7 @@ class ActionSliderState extends BaseActionSliderState {
     required this.standardSize,
     required this.toggleSize,
     required this.relativeSize,
+    required this.defaultToggleSize,
   });
 
   @override

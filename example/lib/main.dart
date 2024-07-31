@@ -156,7 +156,6 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             const SizedBox(height: 24.0),
             ActionSlider.custom(
-              sliderBehavior: SliderBehavior.stretch,
               width: 300.0,
               controller: _controller,
               height: 60.0,

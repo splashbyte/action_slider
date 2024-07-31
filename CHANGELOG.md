@@ -1,10 +1,18 @@
+## 0.8.0-beta.1
+
+- fixes `SliderBehavior.stretch` with `ActionSlider.dual`
+- BREAKING: default loading icon is now adaptive for iOS and macOS
+
 ## 0.8.0-beta.0 [2024-07-30]
+
 - BREAKING: renames `movementCurve` to `anchorPositionCurve`
 - BREAKING: renames `movementDuration` to `anchorPositionDuration`
+- BREAKING: renames `SliderDirection.begin` to `SliderDirection.start`
 - adds `resultToggleMargin`, `toggleMarginCurve` and `toggleMarginDuration`
-- adds `loadingExpanded`, `successExpanded` and `failureExpanded`
+- adds `SliderMode.loadingExpanded`, `SliderMode.successExpanded` and `SliderMode.failureExpanded`
 
 ## 0.7.0 [2023-07-30]
+
 - BREAKING: increases minimum SDK to 2.17
 - BREAKING: changes default background color from `ThemeData.backgroundColor` to `ThemeData.cardColor`
 - BREAKING: changes state type of `ActionSliderController` from `SliderMode` to `ActionSliderControllerState`
