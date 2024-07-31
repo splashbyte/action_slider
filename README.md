@@ -18,14 +18,12 @@ For a switch with a similar look, you can check out [animated_toggle_switch](htt
 ![action_slider_example_snake](https://github.com/splashbyte/action_slider/assets/43761463/d2f92414-bded-48ae-9cf5-9df030fb0be8)  
 ![action_slider_example_expanded](https://github.com/user-attachments/assets/c14f6bee-f2b9-4dfd-806c-fe2fa089a0ea)
 
+`ActionSlider.dual()`  
+![action_slider_example_dual](https://github.com/splashbyte/action_slider/assets/43761463/4903161e-d2f4-47aa-934a-464fba33d2df)  
+![action_slider_example_dual_customized](https://github.com/user-attachments/assets/b4561a3b-daf9-4f60-a30b-c3f83f5f0f8e)
+
 `ActionSlider.standard()` with `TextDirection.rtl`  
 ![action_slider_example_rtl](https://github.com/splashbyte/action_slider/assets/43761463/5d81d3d2-ca52-4eb5-93b3-fada883a6a4f)
-
-`ActionSlider.dual()`  
-![action_slider_example_dual](https://github.com/splashbyte/action_slider/assets/43761463/4903161e-d2f4-47aa-934a-464fba33d2df)
-
-`ActionSlider.dual()` with some customizations  
-![action_slider_example_dual_customized](https://github.com/user-attachments/assets/bf92bb89-433e-49aa-a880-9cbfcf8c34fd)
 
 `ActionSlider.standard()` with `rolling = true`  
 ![action_slider_example_rolling](https://github.com/splashbyte/action_slider/assets/43761463/0a5010e2-d369-46d3-bdfb-0df5832125ed)
