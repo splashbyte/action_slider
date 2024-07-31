@@ -53,6 +53,20 @@ ActionSlider.standard(
 )
 ```
 
+Two directions with `ActionSlider.dual`
+```dart
+ActionSlider.dual(
+    child: const Text('Slide to confirm'),
+    startAction: (controller) async {
+        controller.successExpanded(direction: SliderDirection.start); //starts success animation with an expanded slider
+    },
+    endAction: (controller) async {
+        controller.successExpanded(); //starts success animation
+    },
+    ... //many more parameters
+)
+```
+
 Maximum customizability with `ActionSlider.custom`.
 ```dart
 ActionSlider.custom(
