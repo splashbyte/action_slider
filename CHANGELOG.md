@@ -1,10 +1,10 @@
-## 0.8.0-beta.2
+## 0.8.0-beta.2 [2024-07-31]
 
 - fixes `rolling` with `ActionSlider.dual` and when using a custom `SliderMode`
 - BREAKING: removes `ActionSliderController.dual`
 - BREAKING: moves `anchorPosition` and `allowedInterval` from `ActionSliderControllerState` to `ActionSlider`
 
-## 0.8.0-beta.1
+## 0.8.0-beta.1 [2024-07-31]
 
 - fixes `SliderBehavior.stretch` with `ActionSlider.dual`
 - BREAKING: default loading icon is now adaptive for iOS and macOS

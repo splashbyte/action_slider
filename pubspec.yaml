@@ -1,6 +1,6 @@
 name: action_slider
 description: A slider to confirm actions and provide feedback on the success of these after subsequent loading.
-version: 0.8.0-beta.1
+version: 0.8.0-beta.2
 repository: https://github.com/splashbyte/action_slider
 
 environment:
