@@ -1,5 +1,8 @@
 ## 0.8.0-beta.2
+
 - fixes `rolling` with `ActionSlider.dual` and when using a custom `SliderMode`
+- BREAKING: removes `ActionSliderController.dual`
+- BREAKING: moves `anchorPosition` and `allowedInterval` from `ActionSliderControllerState` to `ActionSlider`
 
 ## 0.8.0-beta.1
 

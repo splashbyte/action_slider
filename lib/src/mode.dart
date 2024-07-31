@@ -1,26 +1,18 @@
 class ActionSliderControllerState {
   final SliderMode mode;
-  final double anchorPosition;
-  final SliderInterval allowedInterval;
   final SliderDirection direction;
 
   ActionSliderControllerState({
     required this.mode,
-    required this.anchorPosition,
-    required this.allowedInterval,
     required this.direction,
   });
 
   ActionSliderControllerState copyWith({
     SliderMode? mode,
-    double? anchorPosition,
-    SliderInterval? allowedInterval,
     SliderDirection? direction,
   }) =>
       ActionSliderControllerState(
         mode: mode ?? this.mode,
-        anchorPosition: anchorPosition ?? this.anchorPosition,
-        allowedInterval: allowedInterval ?? this.allowedInterval,
         direction: direction ?? this.direction,
       );
 }
@@ -67,23 +59,23 @@ class SliderMode {
   /// Indicates whether this mode gets highlighted more clearly in the slider.
   final bool highlighted;
 
-  ///Specifies how far the toggle should jump between 0 and 1.
+  ///Specifies how far the toggle should jump between [-1] and [1].
   ///To adjust this value, please use [SliderMode.jump].
-  final double jumpPosition;
+  final double jumpHeight;
 
   const SliderMode({
     required this.key,
     this.expanded = false,
     this.result = false,
     this.highlighted = false,
-  }) : jumpPosition = 0.0;
+  }) : jumpHeight = 0.0;
 
   const SliderMode._internal({
     required this.key,
     this.expanded = false,
     this.result = false,
     this.highlighted = false,
-    this.jumpPosition = 0.0,
+    this.jumpHeight = 0.0,
   });
 
   static const loading = SliderMode._internal(
@@ -130,7 +122,7 @@ class SliderMode {
       : this._internal(
           key: const _SliderModeKey('jump'),
           expanded: true,
-          jumpPosition: pos,
+          jumpHeight: pos,
         );
 
   @override
@@ -140,10 +132,10 @@ class SliderMode {
           runtimeType == other.runtimeType &&
           key == other.key &&
           custom == other.custom &&
-          jumpPosition == other.jumpPosition;
+          jumpHeight == other.jumpHeight;
 
   @override
-  int get hashCode => key.hashCode ^ custom.hashCode ^ jumpPosition.hashCode;
+  int get hashCode => key.hashCode ^ custom.hashCode ^ jumpHeight.hashCode;
 }
 
 class _SliderModeKey {

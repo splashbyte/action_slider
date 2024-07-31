@@ -29,7 +29,8 @@ typedef ForegroundBuilder = Widget Function(
 typedef SliderAction = Function(ActionSliderController controller);
 typedef StateChangeCallback = Function(ActionSliderState? oldState,
     ActionSliderState state, ActionSliderController controller);
-typedef TapCallback = Function(ActionSliderController controller, double pos);
+typedef TapCallback = Function(
+    ActionSliderController controller, ActionSliderState state, double pos);
 
 BorderRadiusGeometry _edgeInsetsToBorderRadius(EdgeInsetsGeometry edgeInsets) {
   return switch (edgeInsets) {
@@ -66,20 +67,11 @@ class ActionSliderController extends ChangeNotifier
     implements ValueListenable<ActionSliderControllerState> {
   ActionSliderControllerState _value;
 
-  ActionSliderController(
-      {double anchorPosition = 0.0,
-      SliderInterval allowedInterval = const SliderInterval()})
+  ActionSliderController()
       : _value = ActionSliderControllerState(
           mode: SliderMode.standard,
-          anchorPosition: anchorPosition,
-          allowedInterval: allowedInterval,
           direction: SliderDirection.end,
         );
-
-  ActionSliderController.dual(
-      {double anchorPosition = 0.5,
-      SliderInterval allowedInterval = const SliderInterval()})
-      : this(anchorPosition: anchorPosition, allowedInterval: allowedInterval);
 
   @override
   ActionSliderControllerState get value => _value;
@@ -108,48 +100,10 @@ class ActionSliderController extends ChangeNotifier
   ///Resets the slider to its standard expanded state.
   void reset() => _setMode(SliderMode.standard, SliderDirection.end);
 
-  void setAnchorPosition(double pos) {
-    if (_value.anchorPosition == pos) return;
-    if (!_value.allowedInterval.contains(pos)) {
-      throw ArgumentError(
-          'The allowed interval of a ActionSlider has to contain the anchor position');
-    }
-    _value = _value.copyWith(anchorPosition: pos);
-    notifyListeners();
-  }
-
-  void setAllowedInterval(SliderInterval interval) {
-    if (_value.allowedInterval == interval) return;
-    if (!interval.contains(_value.anchorPosition)) {
-      throw ArgumentError(
-          'The allowed interval of a ActionSlider has to contain the anchor position');
-    }
-    _value = _value.copyWith(allowedInterval: interval);
-    notifyListeners();
-  }
-
-  void setAnchorPositionAndAllowedInterval(
-      {double? anchorPosition, SliderInterval? allowedInterval}) {
-    anchorPosition ??= _value.anchorPosition;
-    allowedInterval ??= _value.allowedInterval;
-    if (_value.anchorPosition == anchorPosition &&
-        _value.allowedInterval == allowedInterval) {
-      return;
-    }
-    if (!allowedInterval.contains(anchorPosition)) {
-      throw ArgumentError(
-          'The allowed interval of a ActionSlider has to contain the anchor position');
-    }
-    _value = _value.copyWith(
-        anchorPosition: anchorPosition, allowedInterval: allowedInterval);
-    notifyListeners();
-  }
-
   ///The Toggle jumps to [anchorPosition + dif].
   ///[dif] should be between -1.0 and 1.0.
-  void jump([double dif = 0.3]) => _setMode(
-      SliderMode.jump((value.anchorPosition + dif).clamp(0.0, 1.0)),
-      SliderDirection.end);
+  void jump([double jumpHeight = 0.3]) =>
+      _setMode(SliderMode.jump(jumpHeight), SliderDirection.end);
 
   ///Allows to define custom [SliderMode]s.
   ///This is useful for other results like success or failure.
@@ -277,6 +231,10 @@ class ActionSlider extends StatefulWidget {
 
   final ActionSliderController Function() _defaultControllerBuilder;
 
+  final double anchorPosition;
+
+  final SliderInterval allowedInterval;
+
   ///Constructor with very high customizability
   const ActionSlider.custom({
     Key? key,
@@ -320,13 +278,14 @@ class ActionSlider extends StatefulWidget {
     this.stateChangeCallback,
     this.direction = TextDirection.ltr,
     this.resultToggleMargin,
+    this.anchorPosition = 0.0,
+    this.allowedInterval = const SliderInterval(),
   })  : _defaultControllerBuilder = _controllerBuilder,
         super(key: key);
 
-  static _defaultOnTap(ActionSliderController c, double pos) =>
-      c.jump(pos < c.value.anchorPosition
-          ? max(-0.3, -c.value.anchorPosition)
-          : min(0.3, 1 - c.value.anchorPosition));
+  static _defaultOnTap(
+          ActionSliderController c, ActionSliderState state, double pos) =>
+      c.jump(pos < state.anchorPosition ? -0.3 : 0.3);
 
   static ActionSliderController _controllerBuilder() =>
       ActionSliderController();
@@ -393,6 +352,8 @@ class ActionSlider extends StatefulWidget {
     this.resultToggleMargin,
     this.toggleMarginCurve = Curves.easeInOut,
     this.toggleMarginDuration = const Duration(milliseconds: 350),
+    this.anchorPosition = 0.0,
+    this.allowedInterval = const SliderInterval(),
   })  : backgroundChild = customBackgroundBuilderChild,
         backgroundBuilder = (customBackgroundBuilder ??
             (context, state, _) =>
@@ -488,6 +449,8 @@ class ActionSlider extends StatefulWidget {
     this.resultToggleMargin,
     this.toggleMarginCurve = Curves.easeInOut,
     this.toggleMarginDuration = const Duration(milliseconds: 350),
+    this.anchorPosition = 0.5,
+    this.allowedInterval = const SliderInterval(),
   })  : stateChangeCallback = _dualChangeCallback(
             startAction,
             endAction,
@@ -524,11 +487,8 @@ class ActionSlider extends StatefulWidget {
         foregroundChild = null,
         actionThreshold = 1.0,
         action = null,
-        _defaultControllerBuilder = _dualControllerBuilder,
+        _defaultControllerBuilder = _controllerBuilder,
         super(key: key);
-
-  static ActionSliderController _dualControllerBuilder() =>
-      ActionSliderController.dual();
 
   static StateChangeCallback _dualChangeCallback(
       SliderAction? startAction,
@@ -756,8 +716,7 @@ class ActionSlider extends StatefulWidget {
             _ => rotating && !mode.result
                 ? Transform.rotate(
                     angle: ((state.size.width * state.position) -
-                            state.size.width * state.anchorPosition)
-                         /
+                            state.size.width * state.anchorPosition) /
                         radius,
                     child: icon)
                 : icon!,
@@ -789,7 +748,7 @@ class _ActionSliderState extends State<ActionSlider>
   SliderState _state = SliderState(position: 0.0, state: SlidingState.released);
 
   /// The start position of the current running [_slideAnimation].
-  ValueListenable<double> _startPosition = _FixedValueListenable(0.0);
+  late ValueListenable<double> _startPosition;
 
   @override
   void initState() {
@@ -823,19 +782,18 @@ class _ActionSliderState extends State<ActionSlider>
     _anchorController = AnimationController(
       vsync: this,
       duration: widget.anchorPositionDuration,
-      value: _controller.value.anchorPosition,
+      value: widget.anchorPosition,
     );
-    _anchorAnimation = Tween(
-            begin: _controller.value.anchorPosition,
-            end: _controller.value.anchorPosition)
+    _startPosition = _anchorAnimation = (_anchorAnimationTween =
+            Tween(begin: widget.anchorPosition, end: widget.anchorPosition))
         .animate(_anchorCurvedAnimation = CurvedAnimation(
       parent: _anchorController,
       curve: widget.anchorPositionCurve,
     ));
     _anchorController.addListener(_updatePosition);
     _state = SliderState(
-      position: _controller.value.anchorPosition,
-      anchorPosition: _controller.value.anchorPosition,
+      position: widget.anchorPosition,
+      anchorPosition: widget.anchorPosition,
       state: SlidingState.released,
     );
   }
@@ -881,34 +839,28 @@ class _ActionSliderState extends State<ActionSlider>
     _slideAnimation.reverseCurve = widget.reverseSlideAnimationCurve;
     _anchorCurvedAnimation.curve = widget.anchorPositionCurve;
     _anchorController.duration = widget.anchorPositionDuration;
+
+    if (oldWidget.anchorPosition != widget.anchorPosition) {
+      _anchorAnimationTween.begin = _anchorAnimation.value;
+      _anchorAnimationTween.end = widget.anchorPosition;
+      _anchorController.forward(from: 0.0);
+      _updatePosition();
+    }
   }
 
   void _onControllerStateChange() {
     final controllerValue = _controller.value;
     final direction = controllerValue.direction;
-    if (controllerValue.anchorPosition != _state.anchorPosition) {
-      _anchorAnimationTween.begin = _anchorAnimation.value;
-      _anchorAnimationTween.end = controllerValue.anchorPosition;
-      _anchorController.forward(from: 0.0);
-      _updatePosition();
-    }
-    if (controllerValue.allowedInterval != _state.allowedInterval) {
-      //TODO: animate allowed interval
-      _changeState(
-          _state.copyWith(allowedInterval: controllerValue.allowedInterval),
-          null);
-    }
     if (controllerValue.mode.expanded) {
       if (controllerValue.mode.isJump) {
         if (_state.state == SlidingState.released) {
-          _animateSliderTo(controllerValue.mode.jumpPosition);
+          _animateSliderTo(
+              _state.anchorPosition + controllerValue.mode.jumpHeight);
         }
         _controller._setMode(SliderMode.standard, SliderDirection.end,
             notify: false);
       } else if (controllerValue.mode.result) {
-        _animateSliderTo(direction == SliderDirection.start
-            ? controllerValue.allowedInterval.start
-            : controllerValue.allowedInterval.end);
+        _animateSliderTo(direction == SliderDirection.start ? 0.0 : 1.0);
         _updatePosition(state: SlidingState.fixed);
       } else {
         if (_lastActionSliderState?.relativeSize != 0.0) {
@@ -922,10 +874,8 @@ class _ActionSliderState extends State<ActionSlider>
                 state: SlidingState.released,
               ),
               null);
-          _anchorAnimationTween = Tween(
-            begin: controllerValue.anchorPosition,
-            end: controllerValue.anchorPosition,
-          );
+          _anchorAnimationTween.begin = widget.anchorPosition;
+          _anchorAnimationTween.end = widget.anchorPosition;
           _anchorController.stop();
         }
       }
@@ -939,6 +889,7 @@ class _ActionSliderState extends State<ActionSlider>
   }
 
   void _animateSliderTo(double position) {
+    position = position.clamp(0.0, 1.0);
     _startPosition = _FixedValueListenable(_state.position);
     _changeState(_state.copyWith(releasePosition: position), null,
         setState: false);
@@ -990,6 +941,10 @@ class _ActionSliderState extends State<ActionSlider>
   Widget build(BuildContext context) {
     //TODO: More efficiency by using separate widgets and child property of AnimatedBuilder
 
+    if (!widget.allowedInterval.contains(widget.anchorPosition)) {
+      throw ArgumentError(
+          'The allowed interval of a ActionSlider has to contain the anchor position');
+    }
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxWidth =
@@ -1076,6 +1031,7 @@ class _ActionSliderState extends State<ActionSlider>
                       if (_state.state != SlidingState.released) return;
                       widget.onTap?.call(
                           _controller,
+                          actionSliderState,
                           localPositionToSliderPosition(
                               details.localPosition.dx));
                     },

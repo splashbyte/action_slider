@@ -50,7 +50,7 @@ class _MyHomePageState extends State<MyHomePage> {
             DefaultTextStyle.merge(
               style: const TextStyle(color: Colors.white),
               child: ActionSlider.dual(
-                rolling: true,
+                anchorPosition: 0.7,
                 backgroundBorderRadius: BorderRadius.circular(10.0),
                 width: 300.0,
                 backgroundColor: Colors.black,
