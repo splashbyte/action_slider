@@ -1,3 +1,6 @@
+## 0.8.0-beta.2
+- fixes `rolling` with `ActionSlider.dual` and when using a custom `SliderMode`
+
 ## 0.8.0-beta.1
 
 - fixes `SliderBehavior.stretch` with `ActionSlider.dual`

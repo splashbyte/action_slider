@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 /// For a more customizable crossfade widget you can use the package cross_fade.
 class SliderCrossFade<T> extends StatefulWidget {
   final T current;
-  final Widget Function(BuildContext, T)? builder;
+  final Widget Function(BuildContext, T) builder;
   final Duration duration;
   final bool Function(T, T) equals;
   final bool Function(T, T)? size;
@@ -13,7 +13,7 @@ class SliderCrossFade<T> extends StatefulWidget {
       {Key? key,
       this.duration = const Duration(milliseconds: 750),
       required this.current,
-      this.builder,
+      required this.builder,
       this.equals = _standardEquals,
       this.size})
       : super(key: key);
@@ -109,12 +109,12 @@ class _SliderCrossFadeState<T> extends State<SliderCrossFade<T>>
           Opacity(
               key: _LocalKey(todo[0]),
               opacity: 1 - _opacityAnimation.value,
-              child: widget.builder!(context, todo[0])),
+              child: widget.builder(context, todo[0])),
           if (todo.length > 1)
             Opacity(
                 key: _LocalKey(todo[1]),
                 opacity: _opacityAnimation.value,
-                child: widget.builder!(context, todo[1]))
+                child: widget.builder(context, todo[1]))
         ],
       ),
     );

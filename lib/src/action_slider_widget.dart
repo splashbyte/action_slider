@@ -738,26 +738,29 @@ class ActionSlider extends StatefulWidget {
         duration: crossFadeDuration * (1 / 0.3),
         current: state.sliderMode,
         builder: (context, mode) {
-          final customChild = customForegroundBuilder?.call(
+          final customIcon = customForegroundBuilder?.call(
             context,
             state,
             customForegroundBuilderChild,
           );
-          if (customChild != null) {
-            return Align(alignment: iconAlignment, child: customChild);
+          if (customIcon != null) {
+            icon = customIcon;
+          } else if (mode.custom) {
+            throw StateError('For custom SliderModes you have to '
+                'return something in customForegroundBuilder!');
           }
           Widget child = switch (mode) {
             SliderMode.loading || SliderMode.loadingExpanded => loadingIcon!,
             SliderMode.success || SliderMode.successExpanded => successIcon,
             SliderMode.failure || SliderMode.failureExpanded => failureIcon,
-            _ => mode == SliderMode.standard || mode.isJump
-                ? (rotating
-                    ? Transform.rotate(
-                        angle: state.position * state.size.width / radius,
-                        child: icon)
-                    : icon!)
-                : throw StateError('For using custom SliderModes you have to '
-                    'set customForegroundBuilder!'),
+            _ => rotating && !mode.result
+                ? Transform.rotate(
+                    angle: ((state.size.width * state.position) -
+                            state.size.width * state.anchorPosition)
+                         /
+                        radius,
+                    child: icon)
+                : icon!,
           };
           return Align(alignment: iconAlignment, child: child);
         },

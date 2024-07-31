@@ -13,11 +13,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Confirmation Slider Example',
+      title: 'Action Slider Example',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: Colors.white,
       ),
-      home: const MyHomePage(title: 'Confirmation Slider Example'),
+      home: const MyHomePage(title: 'Action Slider Example'),
     );
   }
 }
@@ -49,6 +50,7 @@ class _MyHomePageState extends State<MyHomePage> {
             DefaultTextStyle.merge(
               style: const TextStyle(color: Colors.white),
               child: ActionSlider.dual(
+                rolling: true,
                 backgroundBorderRadius: BorderRadius.circular(10.0),
                 width: 300.0,
                 backgroundColor: Colors.black,
