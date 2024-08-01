@@ -583,24 +583,6 @@ class ActionSlider extends StatefulWidget {
     Alignment clipAlignment = state.direction == TextDirection.rtl
         ? Alignment.centerLeft
         : Alignment.centerRight;
-    Alignment toggleAlignment = state.direction == TextDirection.rtl
-        ? Alignment.centerRight
-        : Alignment.centerLeft;
-    final realToggleMargin =
-        state.toggleMargin.resolve(Directionality.of(context));
-    EdgeInsetsDirectional toggleMargin = state.direction == TextDirection.rtl
-        ? EdgeInsetsDirectional.only(
-            start: realToggleMargin.right,
-            end: realToggleMargin.left,
-            top: realToggleMargin.top,
-            bottom: realToggleMargin.bottom,
-          )
-        : EdgeInsetsDirectional.only(
-            start: realToggleMargin.left,
-            end: realToggleMargin.right,
-            top: realToggleMargin.top,
-            bottom: realToggleMargin.bottom,
-          );
 
     final innerSize = state.stretchedInnerSize;
     final toggleSize = state.standardToggleSize;
