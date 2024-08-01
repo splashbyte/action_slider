@@ -1,6 +1,6 @@
 class ActionSliderControllerState {
   final SliderMode mode;
-  final SliderDirection direction;
+  final SliderSide direction;
 
   ActionSliderControllerState({
     required this.mode,
@@ -9,7 +9,7 @@ class ActionSliderControllerState {
 
   ActionSliderControllerState copyWith({
     SliderMode? mode,
-    SliderDirection? direction,
+    SliderSide? direction,
   }) =>
       ActionSliderControllerState(
         mode: mode ?? this.mode,
@@ -159,4 +159,4 @@ class _SliderModeKey {
   }
 }
 
-enum SliderDirection { start, end }
+enum SliderSide { start, end }

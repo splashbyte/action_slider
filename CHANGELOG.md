@@ -1,3 +1,8 @@
+## 0.8.0-beta.3
+
+- adds `childPosition` to `ActionSlider.standard`
+- adds `childClip` parameter to `ActionSlider.standard` and `ActionSlider.dual`
+
 ## 0.8.0-beta.2 [2024-07-31]
 
 - fixes `rolling` with `ActionSlider.dual` and when using a custom `SliderMode`

@@ -140,7 +140,10 @@ class ActionSliderState extends BaseActionSliderState {
   final Size toggleSize;
 
   /// The compact/unstretched size of the toggle.
-  final Size defaultToggleSize;
+  final Size standardToggleSize;
+
+  /// The stretched size of the background of the slider.
+  final Size stretchedInnerSize;
 
   /// [1.0] indicates that the slider is expanded and [0.0] indicates that the slider is compact.
   final double relativeSize;
@@ -159,33 +162,30 @@ class ActionSliderState extends BaseActionSliderState {
     required this.standardSize,
     required this.toggleSize,
     required this.relativeSize,
-    required this.defaultToggleSize,
+    required this.standardToggleSize,
+    required this.stretchedInnerSize,
   });
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ActionSliderState &&
+      super == other &&
+          other is ActionSliderState &&
           runtimeType == other.runtimeType &&
           size == other.size &&
           standardSize == other.standardSize &&
           toggleSize == other.toggleSize &&
-          position == other.position &&
-          slidingState == other.slidingState &&
-          sliderMode == other.sliderMode &&
-          releasePosition == other.releasePosition &&
-          direction == other.direction &&
+          standardToggleSize == other.standardToggleSize &&
+          stretchedInnerSize == other.stretchedInnerSize &&
           relativeSize == other.relativeSize;
 
   @override
   int get hashCode =>
+      super.hashCode ^
       size.hashCode ^
       standardSize.hashCode ^
       toggleSize.hashCode ^
-      position.hashCode ^
-      slidingState.hashCode ^
-      sliderMode.hashCode ^
-      releasePosition.hashCode ^
-      direction.hashCode ^
+      standardToggleSize.hashCode ^
+      stretchedInnerSize.hashCode ^
       relativeSize.hashCode;
 }
