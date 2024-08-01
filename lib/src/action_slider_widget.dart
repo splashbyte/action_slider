@@ -50,6 +50,43 @@ BorderRadiusGeometry _edgeInsetsToBorderRadius(EdgeInsetsGeometry edgeInsets) {
   };
 }
 
+/// Indicates the position of the [child] when using the [child] parameter in
+/// [ActionSlider.standard].
+enum SliderChildPosition {
+  /// The [child] is positioned in the center of the slider.
+  ///
+  /// If you want to prevent overlapping with the toggle, you should use
+  /// [centerWithPadding], [centerFreeArea], [centerFreeAreaWithPadding]
+  /// or [balanced].
+  center,
+
+  /// The [child] is positioned in the center of the slider with an additional
+  /// padding for preventing overlapping with the toggle.
+  ///
+  /// If you want a smaller padding, you should use
+  /// [center], [centerFreeArea], [centerFreeAreaWithPadding] or [balanced].
+  centerWithPadding,
+
+  /// The child is positioned in the center of the free area of the slider.
+  centerFreeArea,
+
+  /// The child is positioned in the center of the free area of the slider with
+  /// an additional padding for preventing getting clipped by the edge of the
+  /// slider.
+  centerFreeAreaWithPadding,
+
+  /// A small [child] is positioned more in the center than a large [child]
+  /// but it never overlaps with the toggle.
+  balanced,
+
+  /// [balanced] but with an extra padding for preventing getting clipped by the
+  /// edge of the slider.
+  balancedWithPadding,
+
+  /// No explicit positioning of the child by the package.
+  none
+}
+
 class _FixedValueListenable extends ValueListenable<double> {
   @override
   final double value;
@@ -70,52 +107,50 @@ class ActionSliderController extends ChangeNotifier
   ActionSliderController()
       : _value = ActionSliderControllerState(
           mode: SliderMode.standard,
-          direction: SliderDirection.end,
+          direction: SliderSide.end,
         );
 
   @override
   ActionSliderControllerState get value => _value;
 
   ///Sets the state to success with a compact slider.
-  void success() => _setMode(SliderMode.success, SliderDirection.end);
+  void success() => _setMode(SliderMode.success, SliderSide.end);
 
   ///Sets the state to success with an expanded slider.
-  void successExpanded({SliderDirection direction = SliderDirection.end}) =>
-      _setMode(SliderMode.successExpanded, direction);
+  void successExpanded({SliderSide side = SliderSide.end}) =>
+      _setMode(SliderMode.successExpanded, side);
 
   ///Sets the state to failure with a compact slider.
-  void failure() => _setMode(SliderMode.failure, SliderDirection.end);
+  void failure() => _setMode(SliderMode.failure, SliderSide.end);
 
   ///Sets the state to success with an expanded slider.
-  void failureExpanded({SliderDirection direction = SliderDirection.end}) =>
-      _setMode(SliderMode.failureExpanded, direction);
+  void failureExpanded({SliderSide side = SliderSide.end}) =>
+      _setMode(SliderMode.failureExpanded, side);
 
   ///Sets the state to loading with a compact slider.
-  void loading() => _setMode(SliderMode.loading, SliderDirection.end);
+  void loading() => _setMode(SliderMode.loading, SliderSide.end);
 
   ///Sets the state to loading with an expanded slider.
-  void loadingExpanded({SliderDirection direction = SliderDirection.end}) =>
-      _setMode(SliderMode.loadingExpanded, direction);
+  void loadingExpanded({SliderSide side = SliderSide.end}) =>
+      _setMode(SliderMode.loadingExpanded, side);
 
   ///Resets the slider to its standard expanded state.
-  void reset() => _setMode(SliderMode.standard, SliderDirection.end);
+  void reset() => _setMode(SliderMode.standard, SliderSide.end);
 
   ///The Toggle jumps to [anchorPosition + dif].
   ///[dif] should be between -1.0 and 1.0.
   void jump([double jumpHeight = 0.3]) =>
-      _setMode(SliderMode.jump(jumpHeight), SliderDirection.end);
+      _setMode(SliderMode.jump(jumpHeight), SliderSide.end);
 
   ///Allows to define custom [SliderMode]s.
   ///This is useful for other results like success or failure.
   ///You get this modes in the [foregroundBuilder] of [ConfirmationSlider.custom] or in the [customForegroundBuilder] of [ConfirmationSlider.standard].
-  void custom(SliderMode mode,
-          {SliderDirection direction = SliderDirection.end}) =>
-      _setMode(mode, direction);
+  void custom(SliderMode mode, {SliderSide side = SliderSide.end}) =>
+      _setMode(mode, side);
 
-  void _setMode(SliderMode mode, SliderDirection direction,
-      {bool notify = true}) {
+  void _setMode(SliderMode mode, SliderSide side, {bool notify = true}) {
     if (value.mode == mode) return;
-    _value = _value.copyWith(mode: mode, direction: direction);
+    _value = _value.copyWith(mode: mode, direction: side);
     if (notify) notifyListeners();
   }
 }
@@ -319,6 +354,7 @@ class ActionSlider extends StatefulWidget {
     this.height = 65.0,
     double borderWidth = 5.0,
     bool rolling = false,
+    bool childClip = true,
     this.action,
     this.onTap = _defaultOnTap,
     this.controller,
@@ -354,10 +390,11 @@ class ActionSlider extends StatefulWidget {
     this.toggleMarginDuration = const Duration(milliseconds: 350),
     this.anchorPosition = 0.0,
     this.allowedInterval = const SliderInterval(),
+    SliderChildPosition childPosition = SliderChildPosition.balanced,
   })  : backgroundChild = customBackgroundBuilderChild,
         backgroundBuilder = (customBackgroundBuilder ??
-            (context, state, _) =>
-                _standardBackgroundBuilder(context, state, child)),
+            (context, state, _) => _standardBackgroundBuilder(
+                context, state, child, childPosition, childClip)),
         foregroundBuilder = ((context, state, child) =>
             _standardForegroundBuilder(
               context,
@@ -414,6 +451,7 @@ class ActionSlider extends StatefulWidget {
     this.height = 65.0,
     double borderWidth = 5.0,
     bool rolling = false,
+    bool childClip = true,
     SliderAction? startAction,
     SliderAction? endAction,
     this.onTap = _defaultOnTap,
@@ -461,7 +499,7 @@ class ActionSlider extends StatefulWidget {
         backgroundChild = customBackgroundBuilderChild,
         backgroundBuilder = (customBackgroundBuilder ??
             (context, state, _) => _standardDualBackgroundBuilder(
-                context, state, startChild, endChild)),
+                context, state, startChild, endChild, childClip)),
         foregroundBuilder = ((context, state, child) =>
             _standardForegroundBuilder(
               context,
@@ -537,29 +575,108 @@ class ActionSlider extends StatefulWidget {
   }
 
   static Widget _standardBackgroundBuilder(
-      BuildContext context, ActionSliderState state, Widget? child) {
+      BuildContext context,
+      ActionSliderState state,
+      Widget? child,
+      SliderChildPosition childPosition,
+      bool childClip) {
     Alignment clipAlignment = state.direction == TextDirection.rtl
         ? Alignment.centerLeft
         : Alignment.centerRight;
-    return Padding(
-      padding: EdgeInsets.only(
-        left: state.toggleSize.height / 2,
-        right: state.toggleSize.height / 2,
-      ),
-      child: ClipRect(
-        child: OverflowBox(
-          maxWidth: state.standardSize.width - state.toggleSize.height,
-          maxHeight: state.toggleSize.height,
-          minWidth: state.standardSize.width - state.toggleSize.height,
-          minHeight: state.toggleSize.height,
-          child: Align(
-            alignment: clipAlignment,
-            child: ClipRect(
-              child: Align(
-                alignment: clipAlignment,
-                widthFactor: 1 - state.position,
-                child: Center(child: child),
-              ),
+    Alignment toggleAlignment = state.direction == TextDirection.rtl
+        ? Alignment.centerRight
+        : Alignment.centerLeft;
+    final realToggleMargin =
+        state.toggleMargin.resolve(Directionality.of(context));
+    EdgeInsetsDirectional toggleMargin = state.direction == TextDirection.rtl
+        ? EdgeInsetsDirectional.only(
+            start: realToggleMargin.right,
+            end: realToggleMargin.left,
+            top: realToggleMargin.top,
+            bottom: realToggleMargin.bottom,
+          )
+        : EdgeInsetsDirectional.only(
+            start: realToggleMargin.left,
+            end: realToggleMargin.right,
+            top: realToggleMargin.top,
+            bottom: realToggleMargin.bottom,
+          );
+
+    final innerSize = state.stretchedInnerSize;
+    final toggleSize = state.standardToggleSize;
+
+    final clipBehavior = childClip ? Clip.hardEdge : Clip.none;
+
+    return ClipRect(
+      clipBehavior: clipBehavior,
+      child: OverflowBox(
+        maxWidth: innerSize.width,
+        maxHeight: innerSize.height,
+        minWidth: innerSize.width,
+        minHeight: innerSize.height,
+        child: Align(
+          alignment: clipAlignment,
+          child: ClipRect(
+            clipBehavior: clipBehavior,
+            child: Align(
+              alignment: clipAlignment,
+              widthFactor: (toggleSize.width / (2 * innerSize.width)) +
+                  (1 - state.position) *
+                      ((innerSize.width - toggleSize.width) / innerSize.width),
+              child: switch (childPosition) {
+                SliderChildPosition.none => child,
+                SliderChildPosition.center => Center(child: child),
+                SliderChildPosition.centerWithPadding => Padding(
+                    padding: EdgeInsets.symmetric(horizontal: toggleSize.width),
+                    child: Center(child: child),
+                  ),
+                SliderChildPosition.centerFreeArea => Padding(
+                    padding: EdgeInsetsDirectional.only(start: toggleSize.width)
+                        .resolve(state.direction),
+                    child: Center(child: child),
+                  ),
+                SliderChildPosition.centerFreeAreaWithPadding => Padding(
+                    padding: EdgeInsetsDirectional.only(
+                            start: toggleSize.width, end: toggleSize.width / 2)
+                        .resolve(state.direction),
+                    child: Center(child: child),
+                  ),
+                SliderChildPosition.balanced => Center(
+                    child: FractionalTranslation(
+                      translation: Offset(
+                          (state.direction == TextDirection.rtl ? -1.0 : 1.0) *
+                              (toggleSize.width / 2) /
+                              (innerSize.width - toggleSize.width),
+                          0.0),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                            maxWidth: innerSize.width - toggleSize.width),
+                        child: child,
+                      ),
+                    ),
+                  ),
+                SliderChildPosition.balancedWithPadding => Padding(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: toggleSize.width / 2),
+                    child: Center(
+                      child: FractionalTranslation(
+                        translation: Offset(
+                            (state.direction == TextDirection.rtl
+                                    ? -1.0
+                                    : 1.0) *
+                                (toggleSize.width / 4) /
+                                (innerSize.width - toggleSize.width * 1.5),
+                            0.0),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                              maxWidth:
+                                  innerSize.width - toggleSize.width * 1.5),
+                          child: child,
+                        ),
+                      ),
+                    ),
+                  ),
+              },
             ),
           ),
         ),
@@ -567,33 +684,39 @@ class ActionSlider extends StatefulWidget {
     );
   }
 
-  static Widget _standardDualBackgroundBuilder(BuildContext context,
-      ActionSliderState state, Widget? startChild, Widget? endChild) {
+  static Widget _standardDualBackgroundBuilder(
+      BuildContext context,
+      ActionSliderState state,
+      Widget? startChild,
+      Widget? endChild,
+      bool childClip) {
     Alignment startAlignment =
         AlignmentDirectional.centerStart.resolve(state.direction);
     Alignment endAlignment =
         AlignmentDirectional.centerEnd.resolve(state.direction);
     double innerWidth = state.standardSize.width -
-        state.defaultToggleSize.width -
+        state.standardToggleSize.width -
         state.toggleMargin.horizontal;
     final startSize = Size(
-        innerWidth * state.anchorPosition + state.defaultToggleSize.width / 2,
-        state.defaultToggleSize.height);
+        innerWidth * state.anchorPosition + state.standardToggleSize.width / 2,
+        state.standardToggleSize.height);
     final endSize = Size(
         state.standardSize.width -
             state.toggleMargin.horizontal -
             startSize.width,
-        state.defaultToggleSize.height);
+        state.standardToggleSize.height);
+    final clipBehavior = childClip ? Clip.hardEdge : Clip.none;
     return Row(
       textDirection: state.direction,
       children: [
         SizedBox(
           width: (state.size.width -
-                      state.defaultToggleSize.width -
+                      state.standardToggleSize.width -
                       state.toggleMargin.horizontal) *
                   state.anchorPosition +
-              state.defaultToggleSize.width / 2,
+              state.standardToggleSize.width / 2,
           child: ClipRect(
+            clipBehavior: clipBehavior,
             child: OverflowBox(
               maxWidth: startSize.width,
               maxHeight: startSize.height,
@@ -608,12 +731,12 @@ class ActionSlider extends StatefulWidget {
                         ((1.0 - state.position / state.anchorPosition) *
                                 (1.0 -
                                     0.5 *
-                                        state.defaultToggleSize.width /
+                                        state.standardToggleSize.width /
                                         startSize.width))
                             .clamp(0.0, 1.0),
                     child: Padding(
                       padding: EdgeInsetsDirectional.only(
-                              end: state.defaultToggleSize.width / 2)
+                              end: state.standardToggleSize.width / 2)
                           .resolve(state.direction),
                       child: Center(child: startChild),
                     ),
@@ -625,6 +748,7 @@ class ActionSlider extends StatefulWidget {
         ),
         Expanded(
           child: ClipRect(
+            clipBehavior: clipBehavior,
             child: OverflowBox(
               maxWidth: endSize.width,
               maxHeight: endSize.height,
@@ -640,12 +764,12 @@ class ActionSlider extends StatefulWidget {
                                     (1.0 - state.anchorPosition)) *
                                 (1.0 -
                                     0.5 *
-                                        state.defaultToggleSize.width /
+                                        state.standardToggleSize.width /
                                         endSize.width))
                             .clamp(0.0, 1.0),
                     child: Padding(
                       padding: EdgeInsetsDirectional.only(
-                              start: state.defaultToggleSize.width / 2)
+                              start: state.standardToggleSize.width / 2)
                           .resolve(state.direction),
                       child: Center(child: endChild),
                     ),
@@ -857,10 +981,10 @@ class _ActionSliderState extends State<ActionSlider>
           _animateSliderTo(
               _state.anchorPosition + controllerValue.mode.jumpHeight);
         }
-        _controller._setMode(SliderMode.standard, SliderDirection.end,
+        _controller._setMode(SliderMode.standard, SliderSide.end,
             notify: false);
       } else if (controllerValue.mode.result) {
-        _animateSliderTo(direction == SliderDirection.start ? 0.0 : 1.0);
+        _animateSliderTo(direction == SliderSide.start ? 0.0 : 1.0);
         _updatePosition(state: SlidingState.fixed);
       } else {
         if (_lastActionSliderState?.relativeSize != 0.0) {
@@ -928,7 +1052,8 @@ class _ActionSliderState extends State<ActionSlider>
       direction: oldActionSliderState.direction,
       toggleMargin: oldActionSliderState.toggleMargin,
       relativeSize: oldActionSliderState.relativeSize,
-      defaultToggleSize: oldActionSliderState.defaultToggleSize,
+      standardToggleSize: oldActionSliderState.standardToggleSize,
+      stretchedInnerSize: oldActionSliderState.stretchedInnerSize,
     );
     if (_lastActionSliderState != actionSliderState) {
       widget.stateChangeCallback
@@ -1021,7 +1146,10 @@ class _ActionSliderState extends State<ActionSlider>
                     direction: direction,
                     toggleMargin: toggleMargin,
                     relativeSize: relativeSize,
-                    defaultToggleSize: Size(widget.toggleWidth, toggleHeight),
+                    standardToggleSize: Size(widget.toggleWidth, toggleHeight),
+                    stretchedInnerSize: Size(
+                        maxWidth - widget.toggleMargin.horizontal,
+                        toggleHeight),
                   );
 
                   _changeState(_state, actionSliderState, setState: false);
@@ -1048,7 +1176,7 @@ class _ActionSliderState extends State<ActionSlider>
                             widget.outerBackgroundChild,
                           ),
                           Padding(
-                            padding: toggleMargin,
+                            padding: widget.toggleMargin,
                             child: Stack(
                               clipBehavior: Clip.none,
                               children: [
@@ -1066,6 +1194,13 @@ class _ActionSliderState extends State<ActionSlider>
                                       ),
                                     ),
                                   ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: toggleMargin,
+                            child: Stack(
+                              children: [
                                 Positioned.directional(
                                   textDirection: direction,
                                   start: togglePosition,

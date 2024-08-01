@@ -56,10 +56,10 @@ Two directions with `ActionSlider.dual`
 ActionSlider.dual(
     child: const Text('Slide to confirm'),
     startAction: (controller) async {
-        controller.successExpanded(direction: SliderDirection.start); //starts success animation with an expanded slider
+        controller.successExpanded(side: SliderSide.start); //starts success animation with an expanded slider
     },
     endAction: (controller) async {
-        controller.successExpanded(); //starts success animation
+        controller.success(); //starts success animation
     },
     ... //many more parameters
 )
