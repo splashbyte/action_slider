@@ -1,7 +1,6 @@
-import 'package:action_slider/action_slider.dart';
-import 'package:flutter/material.dart';
+part of 'action_slider_widget.dart';
 
-enum SlidingState { dragged, released, compact, fixed }
+enum SlidingStatus { dragged, released, compact, fixed }
 
 class SliderState {
   final double position,
@@ -9,36 +8,36 @@ class SliderState {
       releasePosition,
       startPosition,
       dragStartPosition;
-  final SlidingState state;
-  final SliderInterval allowedInterval;
+  final SlidingStatus slidingStatus;
+  final SliderStatus status;
 
   SliderState({
     required this.position,
-    required this.state,
+    required this.slidingStatus,
     this.anchorPosition = 0.0,
     this.releasePosition = 0.0,
     this.startPosition = 0.0,
     this.dragStartPosition = 0.0,
-    this.allowedInterval = const SliderInterval(),
+    required this.status,
   });
 
   SliderState copyWith({
     double? position,
-    SlidingState? state,
+    SlidingStatus? slidingStatus,
     double? anchorPosition,
     double? releasePosition,
     double? startPosition,
     double? dragStartPosition,
-    SliderInterval? allowedInterval,
+    SliderStatus? status,
   }) =>
       SliderState(
         position: position ?? this.position,
-        state: state ?? this.state,
+        slidingStatus: slidingStatus ?? this.slidingStatus,
         anchorPosition: anchorPosition ?? this.anchorPosition,
         releasePosition: releasePosition ?? this.releasePosition,
         startPosition: startPosition ?? this.startPosition,
         dragStartPosition: dragStartPosition ?? this.dragStartPosition,
-        allowedInterval: allowedInterval ?? this.allowedInterval,
+        status: status ?? this.status,
       );
 
   @override
@@ -49,19 +48,24 @@ class SliderState {
           position == other.position &&
           anchorPosition == other.anchorPosition &&
           releasePosition == other.releasePosition &&
-          state == other.state;
+          startPosition == other.startPosition &&
+          dragStartPosition == other.dragStartPosition &&
+          slidingStatus == other.slidingStatus &&
+          status == other.status;
 
   @override
   int get hashCode =>
-      position.hashCode ^ releasePosition.hashCode ^ state.hashCode;
+      position.hashCode ^
+      anchorPosition.hashCode ^
+      releasePosition.hashCode ^
+      startPosition.hashCode ^
+      dragStartPosition.hashCode ^
+      slidingStatus.hashCode ^
+      status.hashCode;
 
   @override
   String toString() {
-    return 'SliderState{position: $position, '
-        'anchorPosition: $anchorPosition, '
-        'releasePosition: $releasePosition, '
-        'dragStartPosition: $dragStartPosition, '
-        'state: $state}';
+    return 'SliderState{position: $position, anchorPosition: $anchorPosition, releasePosition: $releasePosition, startPosition: $startPosition, dragStartPosition: $dragStartPosition, state: $slidingStatus, status: $status}';
   }
 }
 
@@ -69,23 +73,23 @@ class BaseActionSliderState {
   /// The current position of the toggle.
   final double position;
 
-  /// The current [SlidingState] of the [ActionSlider].
-  final SlidingState slidingState;
+  /// The current [SlidingStatus] of the [ActionSlider].
+  final SlidingStatus slidingStatus;
 
-  /// The current [SliderMode] of the [ActionSlider].
+  /// The current [SliderStatus] of the [ActionSlider].
   /// It can be set manually with the ActionSliderController.
-  final SliderMode sliderMode;
+  final SliderStatus status;
 
   /// The anchor position of the toggle.
   final double anchorPosition;
 
   /// The position at which the toggle was released.
-  /// Is only relevant if the [slidingState] is [SlidingState.released].
+  /// Is only relevant if the [slidingStatus] is [SlidingStatus.released].
   /// The default value is 0.0.
   final double releasePosition;
 
   /// The position at which the toggle was dragged.
-  /// Is only relevant if the [slidingState] is [SlidingState.dragged].
+  /// Is only relevant if the [slidingStatus] is [SlidingStatus.dragged].
   final double dragStartPosition;
 
   /// The interval in which the toggle can be moved by the user.
@@ -99,8 +103,8 @@ class BaseActionSliderState {
 
   const BaseActionSliderState({
     required this.position,
-    required this.slidingState,
-    required this.sliderMode,
+    required this.slidingStatus,
+    required this.status,
     required this.anchorPosition,
     required this.releasePosition,
     required this.dragStartPosition,
@@ -115,18 +119,26 @@ class BaseActionSliderState {
       other is BaseActionSliderState &&
           runtimeType == other.runtimeType &&
           position == other.position &&
-          slidingState == other.slidingState &&
-          sliderMode == other.sliderMode &&
+          slidingStatus == other.slidingStatus &&
+          status == other.status &&
+          anchorPosition == other.anchorPosition &&
           releasePosition == other.releasePosition &&
-          direction == other.direction;
+          dragStartPosition == other.dragStartPosition &&
+          allowedInterval == other.allowedInterval &&
+          direction == other.direction &&
+          toggleMargin == other.toggleMargin;
 
   @override
   int get hashCode =>
       position.hashCode ^
-      slidingState.hashCode ^
-      sliderMode.hashCode ^
+      slidingStatus.hashCode ^
+      status.hashCode ^
+      anchorPosition.hashCode ^
       releasePosition.hashCode ^
-      direction.hashCode;
+      dragStartPosition.hashCode ^
+      allowedInterval.hashCode ^
+      direction.hashCode ^
+      toggleMargin.hashCode;
 }
 
 class ActionSliderState extends BaseActionSliderState {
@@ -150,8 +162,8 @@ class ActionSliderState extends BaseActionSliderState {
 
   const ActionSliderState({
     required super.position,
-    required super.slidingState,
-    required super.sliderMode,
+    required super.slidingStatus,
+    required super.status,
     required super.anchorPosition,
     required super.releasePosition,
     required super.dragStartPosition,
@@ -188,4 +200,9 @@ class ActionSliderState extends BaseActionSliderState {
       standardToggleSize.hashCode ^
       stretchedInnerSize.hashCode ^
       relativeSize.hashCode;
+
+  /// Alternative way for accessing the [ActionSliderState] in the different
+  /// builders of [ActionSlider] via [BuildContext].
+  static ActionSliderState of(BuildContext context) =>
+      _ActionSliderStateProvider.of(context).state;
 }
