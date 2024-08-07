@@ -108,7 +108,7 @@ class _ExamplePageState extends State<ExamplePage> {
             ),
             const SizedBox(height: 24.0),
             ActionSlider.standard(
-              iconAnimation: SliderIconAnimation.rolling,
+              iconAnimation: SliderIconAnimation.roll,
               width: 300.0,
               backgroundColor: Colors.black,
               reverseSlideAnimationCurve: Curves.easeInOut,
@@ -128,7 +128,7 @@ class _ExamplePageState extends State<ExamplePage> {
             const SizedBox(height: 24.0),
             ActionSlider.standard(
               sliderBehavior: SliderBehavior.stretch,
-              iconAnimation: SliderIconAnimation.rolling,
+              iconAnimation: SliderIconAnimation.roll,
               width: 300.0,
               backgroundColor: Colors.white,
               toggleColor: Colors.amber,

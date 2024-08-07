@@ -90,9 +90,34 @@ enum SliderChildPosition {
   none
 }
 
-enum SliderChildAnimation { none, clipping, fading, clippingAndFading }
+/// The animation that is applied to the children when the toggle moves in
+/// [ActionSlider.standard] and [ActionSlider.dual].
+enum SliderChildAnimation {
+  /// No animation
+  none,
 
-enum SliderIconAnimation { none, rolling, turning }
+  /// The child gets clipped so it disappears behind the toggle.
+  clip,
+
+  /// The child fades away while moving the toggle to the end.
+  fade,
+
+  /// Combination of [clip] and [fade].
+  clipAndFade,
+}
+
+/// The animation that is applied to the icon when the toggle moves in
+/// [ActionSlider.standard] and [ActionSlider.dual].
+enum SliderIconAnimation {
+  /// No animation
+  none,
+
+  /// The icon rolls when dragging the slider.
+  roll,
+
+  /// The icon turns by 180° while dragging the slider.
+  turn,
+}
 
 class _LoadingIndicator extends StatelessWidget {
   const _LoadingIndicator();
@@ -448,7 +473,7 @@ class ActionSlider extends StatefulWidget {
     double borderWidth = 5.0,
     double? resultBorderWidth,
     SliderIconAnimation iconAnimation = SliderIconAnimation.none,
-    SliderChildAnimation childAnimation = SliderChildAnimation.clipping,
+    SliderChildAnimation childAnimation = SliderChildAnimation.clip,
     this.action,
     this.onTap = _defaultOnTap,
     this.controller,
@@ -580,7 +605,7 @@ class ActionSlider extends StatefulWidget {
     this.anchorPosition = 0.5,
     this.allowedInterval = const SliderInterval(),
     this.toggleWidth,
-    SliderChildAnimation childAnimation = SliderChildAnimation.clipping,
+    SliderChildAnimation childAnimation = SliderChildAnimation.clip,
   })  : stateChangeCallback = _dualChangeCallback(
             startAction,
             endAction,
@@ -686,16 +711,14 @@ class ActionSlider extends StatefulWidget {
     final toggleSize = state.standardToggleSize;
 
     final Clip clipBehavior = switch (childAnimation) {
-      SliderChildAnimation.clipping ||
-      SliderChildAnimation.clippingAndFading =>
+      SliderChildAnimation.clip ||
+      SliderChildAnimation.clipAndFade =>
         Clip.hardEdge,
       _ => Clip.none,
     };
 
     final bool fading = switch (childAnimation) {
-      SliderChildAnimation.fading ||
-      SliderChildAnimation.clippingAndFading =>
-        true,
+      SliderChildAnimation.fade || SliderChildAnimation.clipAndFade => true,
       _ => false,
     };
 
@@ -807,16 +830,14 @@ class ActionSlider extends StatefulWidget {
             startSize.width,
         state.standardToggleSize.height);
     final Clip clipBehavior = switch (childAnimation) {
-      SliderChildAnimation.clipping ||
-      SliderChildAnimation.clippingAndFading =>
+      SliderChildAnimation.clip ||
+      SliderChildAnimation.clipAndFade =>
         Clip.hardEdge,
       _ => Clip.none,
     };
 
     final bool fading = switch (childAnimation) {
-      SliderChildAnimation.fading ||
-      SliderChildAnimation.clippingAndFading =>
-        true,
+      SliderChildAnimation.fade || SliderChildAnimation.clipAndFade => true,
       _ => false,
     };
     return Row(
@@ -946,13 +967,13 @@ class ActionSlider extends StatefulWidget {
             FailureSliderStatus() => customIcon ?? failureIcon,
             SuccessSliderStatus() => customIcon ?? successIcon,
             StandardSliderStatus() => switch (iconAnimation) {
-                SliderIconAnimation.rolling => Transform.rotate(
+                SliderIconAnimation.roll => Transform.rotate(
                     angle: ((state.size.width * state.position) -
                             state.size.width * state.anchorPosition) /
                         radius,
                     child: icon,
                   ),
-                SliderIconAnimation.turning => Transform.rotate(
+                SliderIconAnimation.turn => Transform.rotate(
                     angle: state.position * -pi,
                     child: icon,
                   ),
