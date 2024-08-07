@@ -32,8 +32,9 @@ typedef StateChangeCallback = Function(ActionSliderState? oldState,
 typedef TapCallback = Function(
     ActionSliderController controller, ActionSliderState state, double pos);
 
-BorderRadiusGeometry _edgeInsetsToBorderRadius(EdgeInsetsGeometry edgeInsets) {
-  return switch (edgeInsets) {
+BorderRadiusGeometry _subtractPaddingFromBorderRadius(
+    BorderRadiusGeometry borderRadius, EdgeInsetsGeometry edgeInsets) {
+  final subtractedBorderRadius = switch (edgeInsets) {
     EdgeInsets() => BorderRadius.only(
         topLeft: Radius.circular(min(edgeInsets.top, edgeInsets.left)),
         topRight: Radius.circular(min(edgeInsets.top, edgeInsets.right)),
@@ -48,6 +49,7 @@ BorderRadiusGeometry _edgeInsetsToBorderRadius(EdgeInsetsGeometry edgeInsets) {
       ),
     _ => BorderRadius.zero,
   };
+  return borderRadius.subtract(subtractedBorderRadius);
 }
 
 /// Indicates the position of the [child] when using the [child] parameter of
@@ -487,24 +489,24 @@ class ActionSlider extends StatefulWidget {
         backgroundBuilder = (customBackgroundBuilder ??
             (context, state, _) => _standardBackgroundBuilder(
                 context, state, child, childPosition, childAnimation)),
-        foregroundBuilder = ((context, state, child) =>
-            _standardForegroundBuilder(
-              context,
-              state,
-              iconAnimation,
-              icon,
-              loadingIcon,
-              successIcon,
-              failureIcon,
-              toggleColor,
-              customIconBuilder,
-              customIconBuilderChild,
-              foregroundBorderRadius ??
-                  backgroundBorderRadius
-                      .subtract(_edgeInsetsToBorderRadius(state.toggleMargin)),
-              iconAlignment,
-              crossFadeDuration,
-            )),
+        foregroundBuilder =
+            ((context, state, child) => _standardForegroundBuilder(
+                  context,
+                  state,
+                  iconAnimation,
+                  icon,
+                  loadingIcon,
+                  successIcon,
+                  failureIcon,
+                  toggleColor,
+                  customIconBuilder,
+                  customIconBuilderChild,
+                  foregroundBorderRadius ??
+                      _subtractPaddingFromBorderRadius(
+                          backgroundBorderRadius, state.toggleMargin),
+                  iconAlignment,
+                  crossFadeDuration,
+                )),
         outerBackgroundBuilder = customOuterBackgroundBuilder,
         outerBackgroundChild = customOuterBackgroundBuilderChild,
         toggleMargin = EdgeInsets.all(borderWidth),
@@ -595,24 +597,24 @@ class ActionSlider extends StatefulWidget {
                   endChild,
                   childAnimation,
                 )),
-        foregroundBuilder = ((context, state, child) =>
-            _standardForegroundBuilder(
-              context,
-              state,
-              iconAnimation,
-              icon,
-              loadingIcon,
-              successIcon,
-              failureIcon,
-              toggleColor,
-              customIconBuilder,
-              customIconBuilderChild,
-              foregroundBorderRadius ??
-                  backgroundBorderRadius
-                      .subtract(_edgeInsetsToBorderRadius(state.toggleMargin)),
-              iconAlignment,
-              crossFadeDuration,
-            )),
+        foregroundBuilder =
+            ((context, state, child) => _standardForegroundBuilder(
+                  context,
+                  state,
+                  iconAnimation,
+                  icon,
+                  loadingIcon,
+                  successIcon,
+                  failureIcon,
+                  toggleColor,
+                  customIconBuilder,
+                  customIconBuilderChild,
+                  foregroundBorderRadius ??
+                      _subtractPaddingFromBorderRadius(
+                          backgroundBorderRadius, state.toggleMargin),
+                  iconAlignment,
+                  crossFadeDuration,
+                )),
         outerBackgroundBuilder = customOuterBackgroundBuilder,
         outerBackgroundChild = customOuterBackgroundBuilderChild,
         toggleMargin = EdgeInsets.all(borderWidth),
