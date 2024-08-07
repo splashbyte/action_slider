@@ -9,14 +9,14 @@ class SliderCrossFade<T> extends StatefulWidget {
   final bool Function(T, T) equals;
   final bool Function(T, T)? size;
 
-  const SliderCrossFade(
-      {Key? key,
-      this.duration = const Duration(milliseconds: 750),
-      required this.current,
-      required this.builder,
-      this.equals = _standardEquals,
-      this.size})
-      : super(key: key);
+  const SliderCrossFade({
+    super.key,
+    this.duration = const Duration(milliseconds: 750),
+    required this.current,
+    required this.builder,
+    this.equals = _standardEquals,
+    this.size,
+  });
 
   static bool _standardEquals(dynamic t1, dynamic t2) => t1 == t2;
 
@@ -122,5 +122,5 @@ class _SliderCrossFadeState<T> extends State<SliderCrossFade<T>>
 }
 
 class _LocalKey<T> extends ValueKey<T> {
-  const _LocalKey(T value) : super(value);
+  const _LocalKey(super.value);
 }

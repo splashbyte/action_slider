@@ -135,23 +135,51 @@ sealed class SliderStatus {
   bool get toggleVisible;
 
   /// Indicates whether this status gets highlighted more clearly in the slider.
+  ///
+  /// Ignored by [ActionSlider.custom]
   final bool highlighted;
 
   const SliderStatus({this.highlighted = false});
 
   /// [SliderStatus] for loading.
+  ///
+  /// {@template action_slider.status.expanded}
+  /// [expanded] indicates whether the slider is expanded in this status. Otherwise it is compact.
+  /// {@endtemplate}
+  ///
+  /// {@template action_slider.status.highlighted}
+  /// [highlighted] indicates whether this status gets highlighted more clearly in the slider when appearing. Ignored by [ActionSlider.custom]
+  /// {@endtemplate}
+  ///
+  /// {@template action_slider.status.side}
+  /// [side] indicates on which [SliderSide] the toggle should be located. This parameter is ignored when [expanded] is [false].
+  /// {@endtemplate}
   const factory SliderStatus.loading(
       {bool expanded, bool highlighted, SliderSide side}) = LoadingSliderStatus;
 
   /// [SliderStatus] for success.
+  ///
+  /// {@macro action_slider.status.expanded}
+  ///
+  /// {@macro action_slider.status.highlighted}
+  ///
+  /// {@macro action_slider.status.side}
   const factory SliderStatus.success(
       {bool expanded, bool highlighted, SliderSide side}) = SuccessSliderStatus;
 
   /// [SliderStatus] for failure.
+  ///
+  /// {@macro action_slider.status.expanded}
+  ///
+  /// {@macro action_slider.status.highlighted}
+  ///
+  /// {@macro action_slider.status.side}
   const factory SliderStatus.failure(
       {bool expanded, bool highlighted, SliderSide side}) = FailureSliderStatus;
 
   /// Standard status in which the user can drag and move the toggle.
+  ///
+  /// {@macro action_slider.status.highlighted}
   const factory SliderStatus.standard({bool highlighted}) =
       StandardSliderStatus;
 }

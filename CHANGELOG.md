@@ -1,7 +1,7 @@
 ## 0.8.0-beta.3
 
 - adds `childPosition` to `ActionSlider.standard`
-- adds `childClip` parameter to `ActionSlider.standard` and `ActionSlider.dual`
+- adds `childAnimation` parameter to `ActionSlider.standard` and `ActionSlider.dual`
 - migrates from `SliderMode` to `SliderStatus`
 - adds `status` to all constructors
 - adds `expanded`, `highlighted` and `side` parameters to `SliderMode.loading`, `SliderMode.success` and `SliderMode.failure`
