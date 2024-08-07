@@ -25,10 +25,10 @@ For a switch with a similar look, you can check out [animated_toggle_switch](htt
 `ActionSlider.standard()` with `TextDirection.rtl`  
 ![action_slider_example_rtl](https://github.com/splashbyte/action_slider/assets/43761463/5d81d3d2-ca52-4eb5-93b3-fada883a6a4f)
 
-`ActionSlider.standard()` with `rolling = true`  
+`ActionSlider.standard()` with `SliderIconAnimation.roll`  
 ![action_slider_example_rolling](https://github.com/splashbyte/action_slider/assets/43761463/0a5010e2-d369-46d3-bdfb-0df5832125ed)
 
-`ActionSlider.standard()` with `SliderBehavior.stretch` and `rolling = true`  
+`ActionSlider.standard()` with `SliderBehavior.stretch` and `SliderIconAnimation.roll`  
 ![action_slider_example_rolling_snake](https://github.com/splashbyte/action_slider/assets/43761463/e4f27603-83db-412a-8777-c737a9c55b14)
 
 You can build your own sliders with `ActionSlider.custom()`  
