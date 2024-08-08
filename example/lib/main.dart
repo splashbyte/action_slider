@@ -238,7 +238,7 @@ class _ExamplePageState extends State<ExamplePage> {
                       child: AnimatedCheckIcon(
                         icon: const Icon(Icons.check_rounded,
                             color: Colors.white, size: 32.0),
-                        visible: status is SuccessSliderStatus,
+                        visible: status is SliderStatusSuccess,
                         animationCurve: const Interval(0.8, 1.0),
                         animationDuration: const Duration(milliseconds: 1000),
                       ),
@@ -248,7 +248,7 @@ class _ExamplePageState extends State<ExamplePage> {
                       child: CrossFade(
                           value: status,
                           builder: (context, status) =>
-                              status is LoadingSliderStatus
+                              status is SliderStatusLoading
                                   ? const Center(
                                       child: CupertinoActivityIndicator(
                                           color: Colors.white))
@@ -256,7 +256,7 @@ class _ExamplePageState extends State<ExamplePage> {
                     ),
                     Opacity(
                       opacity: state.relativeSize,
-                      child: AppearingWidget(
+                      child: ScaleAppearingWidget(
                         animationDuration: const Duration(milliseconds: 1000),
                         animationCurve:
                             const Interval(0.7, 1.0, curve: Curves.easeOutBack),

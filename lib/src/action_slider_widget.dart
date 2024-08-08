@@ -55,6 +55,11 @@ BorderRadiusGeometry _subtractPaddingFromBorderRadius(
 /// Indicates the position of the [child] when using the [child] parameter of
 /// [ActionSlider.standard].
 enum SliderChildPosition {
+  /// No explicit positioning of the child by the package.
+  ///
+  /// This gives you full control.
+  none,
+
   /// The [child] is positioned in the center of the slider.
   ///
   /// If you want to prevent overlapping with the toggle, you should use
@@ -85,9 +90,6 @@ enum SliderChildPosition {
   /// [balanced] but with an extra padding for preventing getting clipped by the
   /// edge of the slider.
   balancedWithPadding,
-
-  /// No explicit positioning of the child by the package.
-  none
 }
 
 /// The animation that is applied to the children when the toggle moves in
@@ -224,11 +226,11 @@ class ActionSliderController extends ChangeNotifier
   void reset({bool highlighted = false}) =>
       _setStatus(SliderStatus.standard(highlighted: highlighted));
 
-  ///The Toggle jumps to [anchorPosition + jumpHeight].
+  ///The Toggle jumps to [anchorPosition] + [height].
   ///
-  ///[jumpHeight] should be between [-1.0] and [1.0].
-  void jump([double jumpHeight = 0.3]) {
-    _value = _value._copyWith(jump: _SliderJump(height: jumpHeight));
+  ///[height] should be between [-1.0] and [1.0].
+  void jump([double height = 0.3]) {
+    _value = _value._copyWith(jump: _SliderJump(height: height));
     notifyListeners();
   }
 
@@ -442,13 +444,13 @@ class ActionSlider extends StatefulWidget {
   ///
   /// {@endtemplate}
   /// {@template action_slider.constructor.standard.icons}
-  /// [icon] is the icon which is shown when [status] is a [StandardSliderStatus].
+  /// [icon] is the icon which is shown when [status] is a [SliderStatusStandard].
   ///
-  /// [loadingIcon] is the icon which is shown when [status] is a [LoadingSliderStatus].
+  /// [loadingIcon] is the icon which is shown when [status] is a [SliderStatusLoading].
   ///
-  /// [successIcon] is the icon which is shown when [status] is a [SuccessSliderStatus].
+  /// [successIcon] is the icon which is shown when [status] is a [SliderStatusSuccess].
   ///
-  /// [failureIcon] is the icon which is shown when [status] is a [FailureSliderStatus].
+  /// [failureIcon] is the icon which is shown when [status] is a [SliderStatusFailure].
   ///
   /// For overriding the icons or supporting a custom [SliderStatus], you can implement a [customIconBuilder].
   /// You can also use [customIconBuilderChild] for improving performance of [customIconBuilder] if possible.
@@ -963,10 +965,10 @@ class ActionSlider extends StatefulWidget {
           );
           icon = customIcon ?? icon;
           Widget child = switch (status) {
-            LoadingSliderStatus() => customIcon ?? loadingIcon,
-            FailureSliderStatus() => customIcon ?? failureIcon,
-            SuccessSliderStatus() => customIcon ?? successIcon,
-            StandardSliderStatus() => switch (iconAnimation) {
+            SliderStatusLoading() => customIcon ?? loadingIcon,
+            SliderStatusFailure() => customIcon ?? failureIcon,
+            SliderStatusSuccess() => customIcon ?? successIcon,
+            SliderStatusStandard() => switch (iconAnimation) {
                 SliderIconAnimation.roll => Transform.rotate(
                     angle: ((state.size.width * state.position) -
                             state.size.width * state.anchorPosition) /
@@ -985,7 +987,7 @@ class ActionSlider extends StatefulWidget {
           };
           return Align(alignment: iconAlignment, child: child);
         },
-        size: (m1, m2) => m2.highlighted,
+        size: (s1, s2) => s2.highlighted,
       ),
     );
   }
@@ -1025,8 +1027,8 @@ class _ActionSliderState extends State<ActionSlider>
     _state = SliderState(
       status: initialStatus,
       position: switch (initialStatus) {
-        StandardSliderStatus() => widget.anchorPosition,
-        ResultSliderStatus() => initialStatus.side._position,
+        SliderStatusStandard() => widget.anchorPosition,
+        SliderStatusResult() => initialStatus.side._position,
       },
       anchorPosition: widget.anchorPosition,
       slidingStatus: SlidingStatus.released,
@@ -1047,7 +1049,7 @@ class _ActionSliderState extends State<ActionSlider>
     });
     _slideAnimation.addStatusListener((status) {
       if (status == AnimationStatus.completed &&
-          _controller.value.status is StandardSliderStatus) {
+          _controller.value.status is SliderStatusStandard) {
         _dropSlider();
       }
     });
@@ -1139,7 +1141,7 @@ class _ActionSliderState extends State<ActionSlider>
   void _updateStatus(SliderStatus status) {
     if (_state.status != status) {
       if (status.expanded) {
-        if (status is ResultSliderStatus) {
+        if (status is SliderStatusResult) {
           _animateSliderTo(
               status.side._position,
               _updatePosition(state: SlidingStatus.fixed)
@@ -1179,6 +1181,12 @@ class _ActionSliderState extends State<ActionSlider>
       {SlidingStatus? slidingState}) {
     position = position.clamp(0.0, 1.0);
     _startPosition = _FixedValueListenable(state.position);
+    if (_slideAnimationController.status == AnimationStatus.forward &&
+        state.releasePosition == position) {
+      _changeState(state.copyWith(slidingStatus: slidingState), null,
+          setState: false);
+      return;
+    }
     _changeState(
         state.copyWith(releasePosition: position, slidingStatus: slidingState),
         null,
@@ -1250,7 +1258,7 @@ class _ActionSliderState extends State<ActionSlider>
           throw StateError('The constraints of the ActionSlider '
               'are unbound and no width is set');
         }
-        final toggleMargin = _controller.value.status is ResultSliderStatus
+        final toggleMargin = _controller.value.status is SliderStatusResult
             ? widget.resultToggleMargin ?? widget.toggleMargin
             : widget.toggleMargin;
         return TweenAnimationBuilder<EdgeInsetsGeometry>(

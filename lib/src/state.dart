@@ -70,7 +70,7 @@ class SliderState {
 }
 
 class BaseActionSliderState {
-  /// The current position of the toggle.
+  /// The current relative position of the toggle between [0] and [1].
   final double position;
 
   /// The current [SlidingStatus] of the [ActionSlider].
@@ -80,15 +80,15 @@ class BaseActionSliderState {
   /// It can be set manually with the ActionSliderController.
   final SliderStatus status;
 
-  /// The anchor position of the toggle.
+  /// The relative anchor position of the toggle between [0] and [1].
   final double anchorPosition;
 
-  /// The position at which the toggle was released.
+  /// The relative position at which the toggle was released.
   /// Is only relevant if the [slidingStatus] is [SlidingStatus.released].
   /// The default value is 0.0.
   final double releasePosition;
 
-  /// The position at which the toggle was dragged.
+  /// The relative position at which the toggle was dragged.
   /// Is only relevant if the [slidingStatus] is [SlidingStatus.dragged].
   final double dragStartPosition;
 

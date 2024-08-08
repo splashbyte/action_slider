@@ -9,7 +9,8 @@
 
 ### If you like this package, please leave a like there on [pub.dev](https://pub.dev/packages/action_slider) and star on [GitHub](https://github.com/SplashByte/action_slider).
 
-A slider to confirm actions and provide feedback on the success of these after subsequent loading.  
+A fully customizable slider to confirm actions and provide feedback on the success. It supports different states like loading, success and failure.
+
 `LTR` and `RTL` are both supported.  
 For a switch with a similar look, you can check out [animated_toggle_switch](https://pub.dev/packages/animated_toggle_switch).
 

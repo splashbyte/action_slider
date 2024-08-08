@@ -25,7 +25,7 @@ class AnimatedCheckIcon extends StatelessWidget {
       builder: (context, value, _) {
         return Center(
           child: ClipRect(
-            clipper: MyCustomClipper(relativeSize: value),
+            clipper: _MyCustomClipper(relativeSize: value),
             child: icon,
           ),
         );
@@ -34,10 +34,10 @@ class AnimatedCheckIcon extends StatelessWidget {
   }
 }
 
-class MyCustomClipper extends CustomClipper<Rect> {
+class _MyCustomClipper extends CustomClipper<Rect> {
   final double relativeSize;
 
-  MyCustomClipper({required this.relativeSize});
+  _MyCustomClipper({required this.relativeSize});
 
   @override
   Rect getClip(Size size) {
@@ -45,19 +45,19 @@ class MyCustomClipper extends CustomClipper<Rect> {
   }
 
   @override
-  bool shouldReclip(MyCustomClipper oldClipper) {
+  bool shouldReclip(_MyCustomClipper oldClipper) {
     return oldClipper.relativeSize != relativeSize;
   }
 }
 
-class AppearingWidget extends StatefulWidget {
+class ScaleAppearingWidget extends StatefulWidget {
   final Widget child;
   final bool initialVisible;
   final bool visible;
   final Curve animationCurve;
   final Duration animationDuration;
 
-  const AppearingWidget({
+  const ScaleAppearingWidget({
     super.key,
     required this.child,
     this.visible = true,
@@ -67,10 +67,10 @@ class AppearingWidget extends StatefulWidget {
   });
 
   @override
-  State<AppearingWidget> createState() => _AppearingWidgetState();
+  State<ScaleAppearingWidget> createState() => _ScaleAppearingWidgetState();
 }
 
-class _AppearingWidgetState extends State<AppearingWidget>
+class _ScaleAppearingWidgetState extends State<ScaleAppearingWidget>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final CurvedAnimation _animation;
@@ -101,7 +101,7 @@ class _AppearingWidgetState extends State<AppearingWidget>
   }
 
   @override
-  void didUpdateWidget(covariant AppearingWidget oldWidget) {
+  void didUpdateWidget(covariant ScaleAppearingWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     _updateVisible();
   }

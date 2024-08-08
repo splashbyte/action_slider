@@ -58,8 +58,8 @@ class SliderInterval {
 typedef SliderMode = SliderStatus;
 
 /// Standard status in which the user can drag and move the toggle.
-class StandardSliderStatus extends SliderStatus {
-  const StandardSliderStatus({super.highlighted = false});
+class SliderStatusStandard extends SliderStatus {
+  const SliderStatusStandard({super.highlighted = false});
 
   @override
   bool get expanded => true;
@@ -70,7 +70,7 @@ class StandardSliderStatus extends SliderStatus {
 
 /// Status like [success], [failure] and [loading].
 /// In this case the slider indicator is fixed at [side] and not draggable.
-class ResultSliderStatus extends SliderStatus {
+class SliderStatusResult extends SliderStatus {
   @override
   final bool expanded;
 
@@ -82,17 +82,34 @@ class ResultSliderStatus extends SliderStatus {
   /// This parameter is ignored when [expanded] is [false].
   final SliderSide side;
 
-  const ResultSliderStatus({
+  const SliderStatusResult({
     super.highlighted = true,
     this.expanded = false,
     this.side = SliderSide.end,
     this.toggleVisible = true,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      super == other &&
+          other is SliderStatusResult &&
+          runtimeType == other.runtimeType &&
+          expanded == other.expanded &&
+          toggleVisible == other.toggleVisible &&
+          side == other.side;
+
+  @override
+  int get hashCode =>
+      super.hashCode ^
+      expanded.hashCode ^
+      toggleVisible.hashCode ^
+      side.hashCode;
 }
 
 /// [SliderStatus] for success.
-class SuccessSliderStatus extends ResultSliderStatus {
-  const SuccessSliderStatus({
+class SliderStatusSuccess extends SliderStatusResult {
+  const SliderStatusSuccess({
     super.highlighted,
     super.expanded,
     super.side,
@@ -100,8 +117,8 @@ class SuccessSliderStatus extends ResultSliderStatus {
 }
 
 /// [SliderStatus] for failure.
-class FailureSliderStatus extends ResultSliderStatus {
-  const FailureSliderStatus({
+class SliderStatusFailure extends SliderStatusResult {
+  const SliderStatusFailure({
     super.highlighted,
     super.expanded,
     super.side,
@@ -109,8 +126,8 @@ class FailureSliderStatus extends ResultSliderStatus {
 }
 
 /// [SliderStatus] for loading.
-class LoadingSliderStatus extends ResultSliderStatus {
-  const LoadingSliderStatus({
+class SliderStatusLoading extends SliderStatusResult {
+  const SliderStatusLoading({
     super.highlighted = false,
     super.expanded,
     super.side,
@@ -123,7 +140,7 @@ class LoadingSliderStatus extends ResultSliderStatus {
 /// [SliderStatus.success], [SliderStatus.failure] and [SliderStatus.standard].
 ///
 /// If you want to implement your own [SliderStatus], you can instantiate
-/// [StandardSliderStatus] or [ResultSliderStatus].
+/// [SliderStatusStandard] or [SliderStatusResult].
 ///
 /// Alternatively you can also create your own subclasses of them.
 sealed class SliderStatus {
@@ -155,7 +172,7 @@ sealed class SliderStatus {
   /// [side] indicates on which [SliderSide] the toggle should be located. This parameter is ignored when [expanded] is [false].
   /// {@endtemplate}
   const factory SliderStatus.loading(
-      {bool expanded, bool highlighted, SliderSide side}) = LoadingSliderStatus;
+      {bool expanded, bool highlighted, SliderSide side}) = SliderStatusLoading;
 
   /// [SliderStatus] for success.
   ///
@@ -165,7 +182,7 @@ sealed class SliderStatus {
   ///
   /// {@macro action_slider.status.side}
   const factory SliderStatus.success(
-      {bool expanded, bool highlighted, SliderSide side}) = SuccessSliderStatus;
+      {bool expanded, bool highlighted, SliderSide side}) = SliderStatusSuccess;
 
   /// [SliderStatus] for failure.
   ///
@@ -175,13 +192,23 @@ sealed class SliderStatus {
   ///
   /// {@macro action_slider.status.side}
   const factory SliderStatus.failure(
-      {bool expanded, bool highlighted, SliderSide side}) = FailureSliderStatus;
+      {bool expanded, bool highlighted, SliderSide side}) = SliderStatusFailure;
 
   /// Standard status in which the user can drag and move the toggle.
   ///
   /// {@macro action_slider.status.highlighted}
   const factory SliderStatus.standard({bool highlighted}) =
-      StandardSliderStatus;
+      SliderStatusStandard;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SliderStatus &&
+          runtimeType == other.runtimeType &&
+          highlighted == other.highlighted;
+
+  @override
+  int get hashCode => highlighted.hashCode;
 }
 
 enum SliderSide {
