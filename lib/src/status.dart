@@ -141,7 +141,6 @@ class SliderStatusLoading extends SliderStatusResult {
 ///
 /// If you want to implement your own [SliderStatus], you can instantiate
 /// [SliderStatusStandard] or [SliderStatusResult].
-///
 /// Alternatively you can also create your own subclasses of them.
 sealed class SliderStatus {
   /// Indicates whether the slider is expanded in this status. Otherwise it is compact.
@@ -153,7 +152,7 @@ sealed class SliderStatus {
 
   /// Indicates whether this status gets highlighted more clearly in the slider.
   ///
-  /// Ignored by [ActionSlider.custom]
+  /// Ignored by [ActionSlider.custom].
   final bool highlighted;
 
   const SliderStatus({this.highlighted = false});
