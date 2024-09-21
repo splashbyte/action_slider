@@ -1,7 +1,21 @@
 ## 0.8.0-beta.3
 
 - adds `childPosition` to `ActionSlider.standard`
-- adds `childClip` parameter to `ActionSlider.standard` and `ActionSlider.dual`
+- adds `childAnimation` parameter to `ActionSlider.standard` and `ActionSlider.dual`
+- migrates from `SliderMode` to `SliderStatus`
+- adds `status` to all constructors
+- adds `expanded`, `highlighted` and `side` parameters to `SliderMode.loading`, `SliderMode.success`
+  and `SliderMode.failure`
+- BREAKING: renames `customForegroundBuilder` to `customIconBuilder`
+- BREAKING: changes default background color from `ThemeData.cardColor` to `ThemeData.colorScheme.surface`
+- BREAKING: removes `rolling` in favor of the new `iconAnimation` parameter
+- BREAKING: renames `SlidingState` to `SlidingStatus`
+- BREAKING: moves parameters in `ActionSlider.standard` and `ActionSlider.dual` to `style`:
+    - `backgroundColor`
+    - `backgroundBorderRadius` (renamed to `borderRadius`)
+    - `toggleColor`
+    - `boxShadow`
+- adds option to add `SliderStyle` to `extensions` of `ThemeData`
 
 ## 0.8.0-beta.2 [2024-07-31]
 
@@ -16,6 +30,7 @@
 
 ## 0.8.0-beta.0 [2024-07-30]
 
+- BREAKING: increases minimum SDK to 3.0.0
 - BREAKING: renames `movementCurve` to `anchorPositionCurve`
 - BREAKING: renames `movementDuration` to `anchorPositionDuration`
 - BREAKING: renames `SliderDirection.begin` to `SliderDirection.start`

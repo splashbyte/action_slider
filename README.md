@@ -9,7 +9,8 @@
 
 ### If you like this package, please leave a like there on [pub.dev](https://pub.dev/packages/action_slider) and star on [GitHub](https://github.com/SplashByte/action_slider).
 
-A slider to confirm actions and provide feedback on the success of these after subsequent loading.  
+A fully customizable slider to confirm actions and provide feedback on the success. It supports different states like loading, success and failure.
+
 `LTR` and `RTL` are both supported.  
 For a switch with a similar look, you can check out [animated_toggle_switch](https://pub.dev/packages/animated_toggle_switch).
 
@@ -25,10 +26,10 @@ For a switch with a similar look, you can check out [animated_toggle_switch](htt
 `ActionSlider.standard()` with `TextDirection.rtl`  
 ![action_slider_example_rtl](https://github.com/splashbyte/action_slider/assets/43761463/5d81d3d2-ca52-4eb5-93b3-fada883a6a4f)
 
-`ActionSlider.standard()` with `rolling = true`  
+`ActionSlider.standard()` with `SliderIconAnimation.roll`  
 ![action_slider_example_rolling](https://github.com/splashbyte/action_slider/assets/43761463/0a5010e2-d369-46d3-bdfb-0df5832125ed)
 
-`ActionSlider.standard()` with `SliderBehavior.stretch` and `rolling = true`  
+`ActionSlider.standard()` with `SliderBehavior.stretch` and `SliderIconAnimation.roll`  
 ![action_slider_example_rolling_snake](https://github.com/splashbyte/action_slider/assets/43761463/e4f27603-83db-412a-8777-c737a9c55b14)
 
 You can build your own sliders with `ActionSlider.custom()`  
@@ -56,7 +57,7 @@ Two directions with `ActionSlider.dual`
 ActionSlider.dual(
     child: const Text('Slide to confirm'),
     startAction: (controller) async {
-        controller.successExpanded(side: SliderSide.start); //starts success animation with an expanded slider
+        controller.success(expanded: true, side: SliderSide.start); //starts success animation with an expanded slider
     },
     endAction: (controller) async {
         controller.success(); //starts success animation

@@ -6,7 +6,7 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.15.1 <4.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -14,6 +14,7 @@ dependencies:
 
   action_slider:
     path: ..
+  cross_fade: any
 
 dev_dependencies:
   flutter_test:
