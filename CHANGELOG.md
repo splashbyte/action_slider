@@ -4,11 +4,18 @@
 - adds `childAnimation` parameter to `ActionSlider.standard` and `ActionSlider.dual`
 - migrates from `SliderMode` to `SliderStatus`
 - adds `status` to all constructors
-- adds `expanded`, `highlighted` and `side` parameters to `SliderMode.loading`, `SliderMode.success` and `SliderMode.failure`
+- adds `expanded`, `highlighted` and `side` parameters to `SliderMode.loading`, `SliderMode.success`
+  and `SliderMode.failure`
 - BREAKING: renames `customForegroundBuilder` to `customIconBuilder`
 - BREAKING: changes default background color from `ThemeData.cardColor` to `ThemeData.colorScheme.surface`
 - BREAKING: removes `rolling` in favor of the new `iconAnimation` parameter
 - BREAKING: renames `SlidingState` to `SlidingStatus`
+- BREAKING: moves parameters in `ActionSlider.standard` and `ActionSlider.dual` to `style`:
+    - `backgroundColor`
+    - `backgroundBorderRadius` (renamed to `borderRadius`)
+    - `toggleColor`
+    - `boxShadow`
+- adds option to add `SliderStyle` to `extensions` of `ThemeData`
 
 ## 0.8.0-beta.2 [2024-07-31]
 
