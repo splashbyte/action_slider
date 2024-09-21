@@ -5,8 +5,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+part 'conditional_wrapper.dart';
 part 'state.dart';
 part 'status.dart';
+part 'style.dart';
 
 enum SliderBehavior { move, stretch }
 
@@ -21,11 +23,11 @@ enum ThresholdType {
 }
 
 typedef BackgroundBuilder = Widget Function(
-    BuildContext, ActionSliderState, Widget?);
+    BuildContext context, ActionSliderState state, Widget? child);
 typedef NullableForegroundBuilder = Widget? Function(
-    BuildContext, ActionSliderState, Widget?);
+    BuildContext context, ActionSliderState state, Widget? child);
 typedef ForegroundBuilder = Widget Function(
-    BuildContext, ActionSliderState, Widget?);
+    BuildContext context, ActionSliderState state, Widget? child);
 typedef SliderAction = Function(ActionSliderController controller);
 typedef StateChangeCallback = Function(ActionSliderState? oldState,
     ActionSliderState state, ActionSliderController controller);
@@ -271,8 +273,8 @@ class ActionSlider extends StatefulWidget {
   ///The child which is optionally given to the [outerBackgroundBuilder] for efficiency reasons.
   final Widget? outerBackgroundChild;
 
-  ///The builder for outer background. Overwrites [backgroundColor], [backgroundBorderRadius] and [boxShadow].
-  final BackgroundBuilder? outerBackgroundBuilder;
+  ///The builder for outer background. Overwrites [backgroundColor], [borderRadius] and [boxShadow].
+  final BackgroundBuilder outerBackgroundBuilder;
 
   ///The child which is optionally given to the [backgroundBuilder] for efficiency reasons.
   final Widget? backgroundChild;
@@ -317,15 +319,6 @@ class ActionSlider extends StatefulWidget {
   ///The [Curve] for changing the [toggleMargin] and animating
   ///between [toggleMargin] and [resultToggleMargin].
   final Curve toggleMarginCurve;
-
-  ///The [Color] of the [Container] in the background.
-  final Color? backgroundColor;
-
-  ///[BorderRadius] of the [Container] in the background.
-  final BorderRadiusGeometry backgroundBorderRadius;
-
-  ///The [BoxShadow] of the background [Container].
-  final List<BoxShadow> boxShadow;
 
   ///Callback for sliding completely to the right.
   ///Here you should call the loading, success and failure methods of the
@@ -379,18 +372,15 @@ class ActionSlider extends StatefulWidget {
   const ActionSlider.custom({
     super.key,
     this.status,
-    this.outerBackgroundBuilder,
+    required this.outerBackgroundBuilder,
     this.backgroundBuilder,
     required this.foregroundBuilder,
     this.toggleWidth,
     this.toggleMargin = const EdgeInsets.all(5.0),
     this.height = 65.0,
-    this.backgroundColor,
     this.outerBackgroundChild,
     this.backgroundChild,
     this.foregroundChild,
-    this.backgroundBorderRadius =
-        const BorderRadius.all(Radius.circular(100.0)),
     this.action,
     this.controller,
     this.sizeAnimationDuration = const Duration(milliseconds: 350),
@@ -404,14 +394,6 @@ class ActionSlider extends StatefulWidget {
     this.anchorPositionCurve = Curves.linear,
     this.toggleMarginCurve = Curves.easeInOut,
     this.toggleMarginDuration = const Duration(milliseconds: 350),
-    this.boxShadow = const [
-      BoxShadow(
-        color: Colors.black26,
-        spreadRadius: 1,
-        blurRadius: 2,
-        offset: Offset(0, 2),
-      )
-    ],
     this.sliderBehavior = SliderBehavior.move,
     this.onTap = _defaultOnTap,
     this.actionThreshold = 1.0,
@@ -458,6 +440,7 @@ class ActionSlider extends StatefulWidget {
   ActionSlider.standard({
     super.key,
     this.status,
+    SliderStyle style = const SliderStyle(),
     Widget? child,
     Widget loadingIcon = const _LoadingIndicator(),
     Widget successIcon = const Icon(Icons.check_rounded),
@@ -469,8 +452,6 @@ class ActionSlider extends StatefulWidget {
     Widget? customBackgroundBuilderChild,
     BackgroundBuilder? customOuterBackgroundBuilder,
     Widget? customOuterBackgroundBuilderChild,
-    Color? toggleColor,
-    this.backgroundColor,
     this.height = 65.0,
     double borderWidth = 5.0,
     double? resultBorderWidth,
@@ -490,17 +471,7 @@ class ActionSlider extends StatefulWidget {
     this.sizeAnimationCurve = Curves.easeInOut,
     this.anchorPositionCurve = Curves.linear,
     AlignmentGeometry iconAlignment = Alignment.center,
-    this.backgroundBorderRadius =
-        const BorderRadius.all(Radius.circular(100.0)),
     BorderRadiusGeometry? foregroundBorderRadius,
-    this.boxShadow = const [
-      BoxShadow(
-        color: Colors.black26,
-        spreadRadius: 1,
-        blurRadius: 2,
-        offset: Offset(0, 2),
-      )
-    ],
     this.sliderBehavior = SliderBehavior.move,
     this.actionThreshold = 1.0,
     this.actionThresholdType = ThresholdType.instant,
@@ -525,16 +496,15 @@ class ActionSlider extends StatefulWidget {
                   loadingIcon,
                   successIcon,
                   failureIcon,
-                  toggleColor,
                   customIconBuilder,
                   customIconBuilderChild,
-                  foregroundBorderRadius ??
-                      _subtractPaddingFromBorderRadius(
-                          backgroundBorderRadius, state.toggleMargin),
                   iconAlignment,
                   crossFadeDuration,
+                  style,
                 )),
-        outerBackgroundBuilder = customOuterBackgroundBuilder,
+        outerBackgroundBuilder = customOuterBackgroundBuilder ??
+            ((context, state, child) =>
+                _standardOuterBackgroundBuilder(context, state, child, style)),
         outerBackgroundChild = customOuterBackgroundBuilderChild,
         toggleMargin = EdgeInsets.all(borderWidth),
         resultToggleMargin = resultBorderWidth == null
@@ -551,6 +521,7 @@ class ActionSlider extends StatefulWidget {
   ActionSlider.dual({
     super.key,
     this.status,
+    SliderStyle style = const SliderStyle(),
     Widget? startChild,
     Widget? endChild,
     Widget loadingIcon = const _LoadingIndicator(),
@@ -563,13 +534,10 @@ class ActionSlider extends StatefulWidget {
     Widget? customBackgroundBuilderChild,
     BackgroundBuilder? customOuterBackgroundBuilder,
     Widget? customOuterBackgroundBuilderChild,
-    Color? toggleColor,
-    this.backgroundColor,
     this.height = 65.0,
     double borderWidth = 5.0,
     double? resultBorderWidth,
     SliderIconAnimation iconAnimation = SliderIconAnimation.none,
-    bool childClip = true,
     SliderAction? startAction,
     SliderAction? endAction,
     this.onTap = _defaultOnTap,
@@ -585,17 +553,7 @@ class ActionSlider extends StatefulWidget {
     this.sizeAnimationCurve = Curves.easeInOut,
     this.anchorPositionCurve = Curves.linear,
     AlignmentGeometry iconAlignment = Alignment.center,
-    this.backgroundBorderRadius =
-        const BorderRadius.all(Radius.circular(100.0)),
     BorderRadiusGeometry? foregroundBorderRadius,
-    this.boxShadow = const [
-      BoxShadow(
-        color: Colors.black26,
-        spreadRadius: 1,
-        blurRadius: 2,
-        offset: Offset(0, 2),
-      )
-    ],
     this.sliderBehavior = SliderBehavior.move,
     double startActionThreshold = 0.0,
     double endActionThreshold = 1.0,
@@ -633,16 +591,15 @@ class ActionSlider extends StatefulWidget {
                   loadingIcon,
                   successIcon,
                   failureIcon,
-                  toggleColor,
                   customIconBuilder,
                   customIconBuilderChild,
-                  foregroundBorderRadius ??
-                      _subtractPaddingFromBorderRadius(
-                          backgroundBorderRadius, state.toggleMargin),
                   iconAlignment,
                   crossFadeDuration,
+                  style,
                 )),
-        outerBackgroundBuilder = customOuterBackgroundBuilder,
+        outerBackgroundBuilder = customOuterBackgroundBuilder ??
+            ((context, state, child) =>
+                _standardOuterBackgroundBuilder(context, state, child, style)),
         outerBackgroundChild = customOuterBackgroundBuilderChild,
         toggleMargin = EdgeInsets.all(borderWidth),
         resultToggleMargin = resultBorderWidth == null
@@ -688,13 +645,22 @@ class ActionSlider extends StatefulWidget {
     };
   }
 
-  Widget _standardOuterBackgroundBuilder(
-      BuildContext context, ActionSliderState state, Widget? child) {
+  static Widget _standardOuterBackgroundBuilder(BuildContext context,
+      ActionSliderState state, Widget? child, SliderStyle style) {
+    style = SliderStyle.maybeOf(context)?.merge(style) ?? style;
+
+    final theme = Theme.of(context);
+    final borderRadius =
+        style.borderRadius ?? BorderRadius.circular(state.size.height / 2);
+
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: backgroundColor ?? Theme.of(context).colorScheme.surface,
-        borderRadius: backgroundBorderRadius,
-        boxShadow: boxShadow,
+        color: style.backgroundGradient != null
+            ? null
+            : (style.backgroundColor ?? theme.colorScheme.surface),
+        borderRadius: borderRadius,
+        gradient: style.backgroundGradient,
+        boxShadow: style.boxShadow,
       ),
     );
   }
@@ -940,20 +906,31 @@ class ActionSlider extends StatefulWidget {
     Widget loadingIcon,
     Widget successIcon,
     Widget failureIcon,
-    Color? toggleColor,
     NullableForegroundBuilder? customIconBuilder,
     Widget? customIconBuilderChild,
-    BorderRadiusGeometry foregroundBorderRadius,
     AlignmentGeometry iconAlignment,
     Duration crossFadeDuration,
+    SliderStyle style,
   ) {
+    style = SliderStyle.maybeOf(context)?.merge(style) ?? style;
+
     final theme = Theme.of(context);
     double radius = state.size.height / 2;
 
+    final borderRadius = style.borderRadius ?? BorderRadius.circular(radius);
+
+    final toggleBorderRadius = style.toggleBorderRadius ??
+        _subtractPaddingFromBorderRadius(borderRadius, state.toggleMargin);
+
     return DecoratedBox(
       decoration: BoxDecoration(
-          borderRadius: foregroundBorderRadius,
-          color: toggleColor ?? theme.primaryColor),
+        boxShadow: style.toggleBoxShadow,
+        borderRadius: toggleBorderRadius,
+        gradient: style.toggleGradient,
+        color: style.toggleGradient != null
+            ? null
+            : style.toggleColor ?? theme.primaryColor,
+      ),
       child: SliderCrossFade<SliderStatus>(
         duration: crossFadeDuration * (1 / 0.3),
         current: state.status,
@@ -1244,8 +1221,6 @@ class _ActionSliderState extends State<ActionSlider>
 
   @override
   Widget build(BuildContext context) {
-    //TODO: More efficiency by using separate widgets and child property of AnimatedBuilder
-
     if (!widget.allowedInterval.contains(widget.anchorPosition)) {
       throw ArgumentError(
           'The allowed interval of a ActionSlider has to contain the anchor position');
@@ -1365,8 +1340,7 @@ class _ActionSliderState extends State<ActionSlider>
                           children: [
                             Builder(
                                 builder: (context) =>
-                                    (widget.outerBackgroundBuilder ??
-                                        widget._standardOuterBackgroundBuilder)(
+                                    widget.outerBackgroundBuilder(
                                       context,
                                       actionSliderState,
                                       widget.outerBackgroundChild,

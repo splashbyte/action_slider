@@ -53,9 +53,11 @@ class _ExamplePageState extends State<ExamplePage> {
               style: const TextStyle(color: Colors.white),
               child: ActionSlider.dual(
                 anchorPosition: 0.7,
-                backgroundBorderRadius: BorderRadius.circular(10.0),
+                style: SliderStyle(
+                  borderRadius: BorderRadius.circular(10.0),
+                  backgroundColor: Colors.black,
+                ),
                 width: 300.0,
-                backgroundColor: Colors.black,
                 startChild: const Text('Start'),
                 endChild: const Text('End'),
                 icon: const RotatedBox(
@@ -82,8 +84,10 @@ class _ExamplePageState extends State<ExamplePage> {
               resultBorderWidth: 0.0,
               sliderBehavior: SliderBehavior.stretch,
               width: 300.0,
-              backgroundColor: Colors.white,
-              toggleColor: Colors.lightGreenAccent,
+              style: const SliderStyle(
+                backgroundColor: Colors.white,
+                toggleColor: Colors.lightGreenAccent,
+              ),
               action: (controller) async {
                 controller.loading(expanded: true); //starts loading animation
                 await Future.delayed(const Duration(seconds: 3));
@@ -110,10 +114,12 @@ class _ExamplePageState extends State<ExamplePage> {
             ActionSlider.standard(
               iconAnimation: SliderIconAnimation.roll,
               width: 300.0,
-              backgroundColor: Colors.black,
+              style: const SliderStyle(
+                backgroundColor: Colors.black,
+                toggleColor: Colors.purpleAccent,
+              ),
               reverseSlideAnimationCurve: Curves.easeInOut,
               reverseSlideAnimationDuration: const Duration(milliseconds: 500),
-              toggleColor: Colors.purpleAccent,
               icon: const Icon(Icons.add),
               action: (controller) async {
                 controller.loading(); //starts loading animation
@@ -130,8 +136,10 @@ class _ExamplePageState extends State<ExamplePage> {
               sliderBehavior: SliderBehavior.stretch,
               iconAnimation: SliderIconAnimation.roll,
               width: 300.0,
-              backgroundColor: Colors.white,
-              toggleColor: Colors.amber,
+              style: const SliderStyle(
+                backgroundColor: Colors.white,
+                toggleColor: Colors.amber,
+              ),
               iconAlignment: Alignment.centerRight,
               loadingIcon: SizedBox(
                   width: 55,
@@ -162,7 +170,6 @@ class _ExamplePageState extends State<ExamplePage> {
               height: 60.0,
               toggleWidth: 60.0,
               toggleMargin: EdgeInsets.zero,
-              backgroundColor: Colors.green,
               foregroundChild: DecoratedBox(
                   decoration: BoxDecoration(
                       color: Colors.black,
@@ -176,7 +183,6 @@ class _ExamplePageState extends State<ExamplePage> {
                     child: Text(state.position.toStringAsFixed(2),
                         style: theme.textTheme.titleMedium)),
               ),
-              backgroundBorderRadius: BorderRadius.circular(5.0),
               action: (controller) async {
                 controller.loading(); //starts loading animation
                 await Future.delayed(const Duration(seconds: 3));
@@ -192,7 +198,6 @@ class _ExamplePageState extends State<ExamplePage> {
               controller: _controller,
               toggleWidth: 60.0,
               height: 60.0,
-              backgroundColor: Colors.green,
               foregroundChild: Container(
                   decoration: const BoxDecoration(
                     color: Colors.black,
@@ -211,7 +216,6 @@ class _ExamplePageState extends State<ExamplePage> {
                       minWidth: state.standardSize.width,
                       minHeight: state.toggleSize.height,
                       child: child!)),
-              backgroundBorderRadius: BorderRadius.circular(5.0),
               action: (controller) async {
                 controller.loading(); //starts loading animation
                 await Future.delayed(const Duration(seconds: 3));
@@ -219,12 +223,15 @@ class _ExamplePageState extends State<ExamplePage> {
                 await Future.delayed(const Duration(seconds: 1));
                 controller.reset(); //resets the slider
               },
+              outerBackgroundBuilder: (context, state, _) => DecoratedBox(
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(5.0),
+                      color: Colors.green)),
             ),
             const SizedBox(height: 24.0),
             ActionSlider.custom(
               width: 300.0,
               controller: _controller,
-              backgroundColor: Colors.pinkAccent,
               sizeAnimationDuration: const Duration(milliseconds: 700),
               sizeAnimationCurve:
                   const Interval(0.6, 1.0, curve: Curves.easeInOut),
@@ -281,12 +288,16 @@ class _ExamplePageState extends State<ExamplePage> {
                     style: theme.textTheme.titleSmall?.copyWith(
                         color: Colors.white.withOpacity(1.0 - state.position))),
               ),
-              backgroundBorderRadius: BorderRadius.circular(40.0),
               action: (controller) async {
                 controller.success(); //starts success animation
                 await Future.delayed(const Duration(seconds: 3));
                 controller.reset(); //resets the slider
               },
+              outerBackgroundBuilder: (context, state, _) => DecoratedBox(
+                  decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(40.0),
+                color: Colors.pinkAccent,
+              )),
             ),
           ],
         ),
