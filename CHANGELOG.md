@@ -1,4 +1,8 @@
-## 0.8.0-beta.3
+## 0.8.0-beta.4
+
+- adds `cursors` to all constructors
+
+## 0.8.0-beta.3 [2024-09-21]
 
 - adds `childPosition` to `ActionSlider.standard`
 - adds `childAnimation` parameter to `ActionSlider.standard` and `ActionSlider.dual`

@@ -116,4 +116,29 @@ class SliderStyle extends ThemeExtension<SliderStyle> {
         toggleBoxShadow:
             BoxShadow.lerpList(toggleBoxShadow, other.toggleBoxShadow, t),
       );
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SliderStyle &&
+          runtimeType == other.runtimeType &&
+          backgroundColor == other.backgroundColor &&
+          borderRadius == other.borderRadius &&
+          backgroundGradient == other.backgroundGradient &&
+          toggleColor == other.toggleColor &&
+          toggleBorderRadius == other.toggleBorderRadius &&
+          toggleGradient == other.toggleGradient &&
+          toggleBoxShadow == other.toggleBoxShadow &&
+          boxShadow == other.boxShadow;
+
+  @override
+  int get hashCode =>
+      backgroundColor.hashCode ^
+      borderRadius.hashCode ^
+      backgroundGradient.hashCode ^
+      toggleColor.hashCode ^
+      toggleBorderRadius.hashCode ^
+      toggleGradient.hashCode ^
+      toggleBoxShadow.hashCode ^
+      boxShadow.hashCode;
 }
