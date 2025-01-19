@@ -1,11 +1,10 @@
 [![pub.dev](https://img.shields.io/pub/v/action_slider.svg?style=flat?logo=dart)](https://pub.dev/packages/action_slider)
 [![github](https://img.shields.io/static/v1?label=platform&message=flutter&color=1ebbfd)](https://github.com/SplashByte/action_slider)
 [![likes](https://img.shields.io/pub/likes/action_slider)](https://pub.dev/packages/action_slider/score)
-[![popularity](https://img.shields.io/pub/popularity/action_slider)](https://pub.dev/packages/action_slider/score)
+[![downloads](https://img.shields.io/pub/dm/action_slider)](https://pub.dev/packages/action_slider/score)
 [![pub points](https://img.shields.io/pub/points/action_slider)](https://pub.dev/packages/action_slider/score)
 [![license](https://img.shields.io/github/license/SplashByte/action_slider.svg)](https://github.com/SplashByte/action_slider/blob/main/LICENSE)
-
-[![buy me a coffee](https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20pizza&emoji=🍕&slug=splashbyte&button_colour=FF8838&font_colour=ffffff&font_family=Poppins&outline_colour=000000&coffee_colour=ffffff')](https://www.buymeacoffee.com/splashbyte)
+[![buy me a coffee](https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee)](https://www.buymeacoffee.com/splashbyte)
 
 ### If you like this package, please leave a like there on [pub.dev](https://pub.dev/packages/action_slider) and star on [GitHub](https://github.com/SplashByte/action_slider).
 
